@@ -1,5 +1,9 @@
-
-# No header information! This is stored in the PredicateInstanceList
+# =====================
+# Header information
+# Stores node ID producing this message, plus timestamp
+# =====================
+std_msgs/Header header
+germ_msgs/SourceInfo info
 
 # =====================
 # Provide a defined predicate

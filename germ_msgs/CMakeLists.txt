@@ -50,6 +50,8 @@ add_message_files(
   Object.msg
   Predicate.msg
   PredicateInstance.msg
+  PredicateInstanceStamped.msg
+  PredicateInstanceList.msg
 )
 
 ## Generate services in the 'srv' folder
