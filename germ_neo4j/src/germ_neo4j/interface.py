@@ -9,6 +9,10 @@ import rospy
 
 class GraphInterface:
 
+    '''
+    add_predicate_instance()
+    Process a single instantiated predicate into the system.
+    '''
     def add_predicate_instance(self, msg):
         entities = self.db.get_or_create_index(neo4j.Node, "Entities")
         classes = self.db.get_or_create_index(neo4j.Node, "Classes")
@@ -29,11 +33,6 @@ class GraphInterface:
         entities = self.db.get_or_create_index(neo4j.Node, "Entities")
         classes = self.db.get_or_create_index(neo4j.Node, "Classes")
         predicates = self.db.get_or_create_index(neo4j.Relationship, "ClassPredicates")
-
-        #obj_class, entity, isa = self.db.create(
-        #        node(name=msg.obj_class),
-        #        node(name=msg.name),
-        #        rel(0, "IS-A", 1))
 
         entity = entities.get_or_create("name",msg.name, {"name":msg.name})
         entity.add_labels("entity")
@@ -67,7 +66,12 @@ class GraphInterface:
     Uses the operation field to determine whether to add or delete.
     '''
     def update_predicates_cb(self, msg):
-        pass
+        for pred in msg.predicates:
+            if pred.operation == gm.PredicateInstance.ADD:
+                add_predicate_instance(pred)
+            else:
+                # find and remove this predicate; it's no longer valid
+                pass
 
     def __init__(self, db_address="http://localhost:7474/db/data"):
         rospy.Subscriber("add_predicate", gm.PredicateInstance, self.add_predicate_cb)
@@ -79,11 +83,19 @@ class GraphInterface:
 if __name__ == "__main__":
     rospy.init_node("germ_neo4j_interface")
 
+    address = rospy.param("~db_address","http://localhost:7474/db/data")
+    purge = rospy.param("~purge","false")
+
     rate = rospy.Rate(30)
 
     try:
 
-        gi = GraphInterface()
+        gi = GraphInterface(address)
+
+        if purge == "true":
+            gi.purge()
+        elif not purge == "false":
+            rospy.logwarn("Unknown value for argument \"purge\":"+purge)
 
         while not rospy.is_shutdown():
             rate.sleep()
