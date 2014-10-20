@@ -68,9 +68,22 @@ It contains code that creates classes, entities, and predicates in a connected N
 
 This package provides the message types we want.
 
+*Object*: defines a single entity in the world, with a name, class, and optional properties.
+*Properties*: defines a set of typed key/value pairs for an entity or predicate.
+*Predicate*: message type describing a relationship between two entities, an entity and a class, or two classes.
+*PredicateInstance*: describes a specific instantiation of a predicate as a relationship between two specific entities or classes.
+
 ### GERM ROS
 
 The package `germ_ros` provides a connection between GERM's Neo4j back and and different application-specific modules via ROS messages.
+
+Run this with:
+
+```bash
+rosrun germ_ros ros_interface.py __ns:=germ
+```
+
+You can change the namespace to whatever you want, or leave it empty. The ROS interface script also takes two other arguments: `_purge:=true` will clear the graph database on startup, and `_address:=XXX` will set the address to use when connecting to the database.
 
 ## Glossary
 
