@@ -6,6 +6,26 @@ import std_msgs.msg as sm
 
 from germ_neo4j import GermDatabaseConnection
 
+def get_properties(props, name=""):
+    data = {}
+    for i in range(len(props.key)):
+        k = props.key[i]
+        v = props.value[i]
+        t = props.type[i]
+
+        if len(v) == 0:
+            continue
+
+        if t == "float":
+            data[k] = float(v)
+        else:
+            if not t == "string":
+                rospy.logwarn("Unrecognized type: %s"%(t))
+            data[k] = v
+
+    if not len(name) == 0:
+        data["name"] = name
+
 class GermROSListener:
     
     def __init__(self, db_address="http://localhost:7474/db/data"):
@@ -14,23 +34,6 @@ class GermROSListener:
         rospy.Subscriber("add_class", sm.String, self.add_class_cb)
         rospy.Subscriber("add_object", gm.Object, self.add_obj_cb)
         rospy.Subscriber("update_predicates", gm.PredicateInstanceList, self.update_predicates_cb)
-
-    def get_properties(props, name=""):
-        data = {}
-        for i in range(len(props.key)):
-            k = props.key[i]
-            v = props.value[i]
-            t = props.type[i]
-
-            if t == "float":
-                data[k] = float(v)
-            else:
-                if not t == "string":
-                    rospy.logwarn("Unrecognized type: %s"%(t))
-                data[k] = v
-        if not len(name) == 0:
-            data["name"] = name
-
 
     '''
     add_obj_cb()
@@ -53,8 +56,8 @@ class GermROSListener:
     This ignores the OPERATION field for now.
     '''
     def add_predicate_cb(self, msg):
-        data = get_properties(msg.data, msg.predicate)
-        self.dbc.addPredicateInstance(msg.parent.name, msg.child.name, msg.predicate, data)
+        data = get_properties(msg.data, msg.predicate.name)
+        self.dbc.addPredicateInstance(msg.parent.name, msg.child.name, msg.predicate.name, data)
 
     '''
     update_predicates_cb()
@@ -64,8 +67,8 @@ class GermROSListener:
     def update_predicates_cb(self, msg):
         for pred in msg.predicates:
             if pred.operation == gm.PredicateInstance.ADD:
-                data = get_properties(pred.data, pred.predicate)
-                addPredicateInstance(pred.parent.name, pred.child.name, pred.predicate, data)
+                data = get_properties(pred.data, pred.predicate.name)
+                addPredicateInstance(pred.parent.name, pred.child.name, pred.predicate.name, data)
             else:
                 # find and remove this predicate; it's no longer valid
                 rospy.logerr("Remove not yet implemented!")

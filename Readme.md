@@ -71,3 +71,13 @@ This package provides the message types we want.
 ### GERM ROS
 
 The package `germ_ros` provides a connection between GERM's Neo4j back and and different application-specific modules via ROS messages.
+
+## Glossary
+
+This section contains defined entities, classes, and predicates in GERM with some set, expected meaning. Write down conventions here.
+
+### Predicates
+
+#### IS-A
+
+*(Parent) IS-A (Child)* means that the entity named *Parent* is a member of class *Child*. This relationship should not have any additional properties.

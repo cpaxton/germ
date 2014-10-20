@@ -19,7 +19,7 @@ class GermDatabaseConnection:
         child = entities.get("name",child_name)
 
         if not (len(parent) == 0) and not (len(child) == 0):
-            predicates.get_or_create("predicate",parent_name+" "+predicate_name+" "+child_name, (parent[0], predicate_name, child[0]), data)
+            predicates.get_or_create("predicate",parent_name+" "+predicate_name+" "+child_name, (parent[0], predicate_name, child[0], data))
 
     '''
     addObject()
