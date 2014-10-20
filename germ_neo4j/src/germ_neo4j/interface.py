@@ -2,9 +2,6 @@
 
 from py2neo import neo4j, node, rel
 
-import germ_msgs.msg as gm
-import std_msgs.msg as sm
-
 import rospy
 
 class GermDatabaseConnection:

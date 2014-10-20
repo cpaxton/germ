@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-
 import rospy
-import germ_msgs as gm
-import std_msgs as sm
+import germ_msgs.msg as gm
+import std_msgs.msg as sm
 
 from germ_neo4j import GermDatabaseConnection
 
