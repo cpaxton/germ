@@ -74,17 +74,17 @@ class GraphInterface:
                 pass
 
     def __init__(self, db_address="http://localhost:7474/db/data"):
+        self.db = neo4j.GraphDatabaseService(db_address)
         rospy.Subscriber("add_predicate", gm.PredicateInstance, self.add_predicate_cb)
         rospy.Subscriber("add_class", sm.String, self.add_class_cb)
         rospy.Subscriber("add_object", gm.Object, self.add_obj_cb)
         rospy.Subscriber("update_predicates", gm.PredicateInstanceList, self.update_predicates_cb)
-        self.db = neo4j.GraphDatabaseService(db_address)
 
 if __name__ == "__main__":
     rospy.init_node("germ_neo4j_interface")
 
-    address = rospy.param("~db_address","http://localhost:7474/db/data")
-    purge = rospy.param("~purge","false")
+    address = rospy.get_param("~db_address","http://localhost:7474/db/data")
+    purge = rospy.get_param("~purge","false")
 
     rate = rospy.Rate(30)
 
