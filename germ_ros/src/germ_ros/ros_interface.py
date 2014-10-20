@@ -5,7 +5,11 @@ import rospy
 import germ_msgs as gm
 import std_msgs as sm
 
-class GermRosConnection:
-    pass
+from germ_neo4j import GermDatabaseConnection
+
+class GermROSListener:
+    
+    def __init__(self):
+        dbc = GermDatabaseConnection()
 
 

@@ -58,14 +58,18 @@ These naming conventions are not very strongly enforced, though. Entity names ar
 
 ### GERM Predicator
 
-This package contains the code to produce predicates from object relationship information. It is written in C++.
-
+This package contains the code to produce predicates from object relationship information. It is written in C++ and uses the Germ ROS messages to communicate to the database.
 
 ### GERM Neo4j
 
-This is the interface to the Neo4j database back-end.
+The `germ_neo4j` package is the interface to the Neo4j database back-end.
+
+It contains code that creates classes, entities, and predicates in a connected Neo4j database.
 
 ### GERM Messages
 
-
 This package provides the message types we want.
+
+### GERM ROS
+
+The package `germ_ros` provides a connection between GERM's Neo4j back and and different application-specific modules via ROS messages.

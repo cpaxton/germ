@@ -7,7 +7,7 @@ import std_msgs.msg as sm
 
 import rospy
 
-class GraphInterface:
+class GermDatabaseConnection:
 
     '''
     add_predicate_instance()
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     try:
 
-        gi = GraphInterface(address)
+        gi = GermDatabaseConnection(address)
 
         if purge == "true":
             gi.purge()
