@@ -10,95 +10,49 @@ import rospy
 class GermDatabaseConnection:
 
     '''
-    add_predicate_instance()
+    addPredicateInstance()
     Process a single instantiated predicate into the system.
     '''
-    def add_predicate_instance(self, msg):
+    def addPredicateInstance(self, parent_name, child_name, predicate_name, data):
         entities = self.db.get_or_create_index(neo4j.Node, "Entities")
         classes = self.db.get_or_create_index(neo4j.Node, "Classes")
         predicates = self.db.get_or_create_index(neo4j.Relationship, "Predicates")
 
-        parent = entities.get("name",msg.parent.name)
-        child = entities.get("name",msg.child.name)
+        parent = entities.get("name",parent_name)
+        child = entities.get("name",child_name)
 
         if not (len(parent) == 0) and not (len(child) == 0):
-            predicates.get_or_create("predicate",msg.parent.name+" "+msg.predicate.name+" "+msg.child.name, (parent[0], msg.predicate.name, child[0]))
+            predicates.get_or_create("predicate",parent_name+" "+predicate_name+" "+child_name, (parent[0], predicate_name, child[0]), data)
 
     '''
-    add_obj_cb()
+    addObject()
     Adds an object with a class.
     '''
-    def add_obj_cb(self, msg):
+    def addObject(self, name, obj_class_name, data):
 
         entities = self.db.get_or_create_index(neo4j.Node, "Entities")
         classes = self.db.get_or_create_index(neo4j.Node, "Classes")
         predicates = self.db.get_or_create_index(neo4j.Relationship, "ClassPredicates")
 
-        entity = entities.get_or_create("name",msg.name, {"name":msg.name})
+        entity = entities.get_or_create("name", name, data)
         entity.add_labels("entity")
         
-        obj_class = classes.get_or_create("name", msg.obj_class, {"name":msg.obj_class})
+        obj_class = classes.get_or_create("name", obj_class_name, {"name":obj_class_name})
         obj_class.add_labels("class")
 
-        predicates.get_or_create("predicate",msg.name, (entity, "IS-A", obj_class))
+        predicates.get_or_create("predicate",name, (entity, "IS-A", obj_class))
 
     '''
-    add_class_cb()
+    addClass()
     Callback to add a single class to the database, as a string,
     '''
-    def add_class_cb(msg):
+    def addClass(self, class_name):
         classes = self.db.get_or_create_index(neo4j.Node, "Classes")
 
-        obj_class = classes.get_or_create("name", msg.data)
+        obj_class = classes.get_or_create("name", class_name)
         obj_class.add_labels("class")
-
-    '''
-    add_predicate_cb()
-    Class to force addition of a single instantiated predicate.
-    This ignores the OPERATION field for now.
-    '''
-    def add_predicate_cb(self, msg):
-        self.add_predicate_instance(msg)
-
-    '''
-    update_predicates_cb()
-    Takes a whole list of predicates and saves them in the graph database.
-    Uses the operation field to determine whether to add or delete.
-    '''
-    def update_predicates_cb(self, msg):
-        for pred in msg.predicates:
-            if pred.operation == gm.PredicateInstance.ADD:
-                add_predicate_instance(pred)
-            else:
-                # find and remove this predicate; it's no longer valid
-                pass
 
     def __init__(self, db_address="http://localhost:7474/db/data"):
         self.db = neo4j.GraphDatabaseService(db_address)
-        rospy.Subscriber("add_predicate", gm.PredicateInstance, self.add_predicate_cb)
-        rospy.Subscriber("add_class", sm.String, self.add_class_cb)
-        rospy.Subscriber("add_object", gm.Object, self.add_obj_cb)
-        rospy.Subscriber("update_predicates", gm.PredicateInstanceList, self.update_predicates_cb)
 
-if __name__ == "__main__":
-    rospy.init_node("germ_neo4j_interface")
 
-    address = rospy.get_param("~db_address","http://localhost:7474/db/data")
-    purge = rospy.get_param("~purge","false")
-
-    rate = rospy.Rate(30)
-
-    try:
-
-        gi = GermDatabaseConnection(address)
-
-        if purge == "true":
-            gi.purge()
-        elif not purge == "false":
-            rospy.logwarn("Unknown value for argument \"purge\":"+purge)
-
-        while not rospy.is_shutdown():
-            rate.sleep()
-
-    except rospy.ROSInterruptException:
-        pass

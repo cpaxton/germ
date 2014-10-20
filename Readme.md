@@ -6,9 +6,7 @@ GERM (Graphical Entity-relationship Model) is the successor to Predicator I am b
 
 GERM stores entity and class information as a series of nodes in a graph, connected by predicates. Predicates are different relationships, with some kind of task-relevant meaning.
 
-#### Why is this not a fork of Predicator?
-
-Mostly because I don't want it to work the same way Predicator does. Predicator is closely tied to the current implementation of CoSTAR; it is used as a blackboard by many parts of the CoSTAR software.
+**Why is this not a fork of Predicator?** Mostly because I don't want it to work the same way Predicator does. Predicator is closely tied to the current implementation of CoSTAR; it is used as a blackboard by many parts of the CoSTAR software.
 
 ### Conventions
 
