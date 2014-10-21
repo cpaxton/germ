@@ -19,7 +19,7 @@ class GermDatabaseConnection:
         child = entities.get("name",child_name)
 
         if not (len(parent) == 0) and not (len(child) == 0):
-            predicates.get_or_create("predicate",parent_name+" "+predicate_name+" "+child_name, (parent[0], predicate_name, child[0], data))
+            p = predicates.get_or_create("predicate",parent_name+" "+predicate_name+" "+child_name, (parent[0], predicate_name, child[0], data))
             return True
         else:
             return False
@@ -34,9 +34,13 @@ class GermDatabaseConnection:
 
         if not (len(parent) == 0) and not (len(child) == 0):
             print ("predicate",parent_name+" "+predicate_name+" "+child_name)
-            print predicates.get("predicate",parent_name+" "+predicate_name+" "+child_name)
-            predicates.remove("predicate",parent_name+" "+predicate_name+" "+child_name)
-            return True
+            p = predicates.get("predicate",parent_name+" "+predicate_name+" "+child_name)
+            print p
+            if len(p) > 0:
+                self.db.delete(p[0])
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -56,7 +60,7 @@ class GermDatabaseConnection:
         obj_class = classes.get_or_create("name", obj_class_name, {"name":obj_class_name})
         obj_class.add_labels("class")
 
-        predicates.get_or_create("predicate",name + " CLASS", (entity, "IS-A", obj_class))
+        p = predicates.get_or_create("predicate",name + " CLASS", (entity, "IS-A", obj_class))
 
     '''
     addClass()
