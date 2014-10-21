@@ -57,7 +57,8 @@ class GermROSListener:
     '''
     def add_predicate_cb(self, msg):
         data = get_properties(msg.data, msg.predicate.name)
-        self.dbc.addPredicateInstance(msg.parent.name, msg.child.name, msg.predicate.name, data)
+        if not self.dbc.addPredicateInstance(msg.parent.name, msg.child.name, msg.predicate.name, data):
+            rospy.logerr("Was not able to add predicate \"%s\" from \"%s\" to \"%s\"; it references unknown entities/classes!"%(msg.predicate.name,msg.parent.name,msg.child.name))
 
     '''
     update_predicates_cb()
@@ -68,11 +69,14 @@ class GermROSListener:
         for pred in msg.predicates:
             if pred.operation == gm.PredicateInstance.ADD:
                 data = get_properties(pred.data, pred.predicate.name)
-                addPredicateInstance(pred.parent.name, pred.child.name, pred.predicate.name, data)
-            else:
+                if not self.dbc.addPredicateInstance(pred.parent.name, pred.child.name, pred.predicate.name, data):
+                    rospy.logerr("Was not able to add predicate \"%s\" from \"%s\" to \"%s\"; it references unknown entities/classes!"%(pred.predicate.name,pred.parent.name,pred.child.name))
+            elif pred.operation == gm.PredicateInstance.REMOVE:
                 # find and remove this predicate; it's no longer valid
-                rospy.logerr("Remove not yet implemented!")
-                pass
+                if not self.dbc.deletePredicateInstance(pred.parent.name, pred.child.name, pred.predicate.name):
+                    rospy.logerr("Predicate \"%s\" from \"%s\" to \"%s\" references unknown entities/classes and cannot be removed!"%(pred.predicate.name,pred.parent.name,pred.child.name))
+            else:
+                rospy.logerr("Unrecognized operation code: \"%d\". Did you forget to set ADD or REMOVE?"%(pred.operation))
 
 
 

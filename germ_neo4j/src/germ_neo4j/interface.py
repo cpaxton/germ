@@ -20,6 +20,25 @@ class GermDatabaseConnection:
 
         if not (len(parent) == 0) and not (len(child) == 0):
             predicates.get_or_create("predicate",parent_name+" "+predicate_name+" "+child_name, (parent[0], predicate_name, child[0], data))
+            return True
+        else:
+            return False
+
+    def deletePredicateInstance(self, parent_name, child_name, predicate_name):
+        entities = self.db.get_or_create_index(neo4j.Node, "Entities")
+        classes = self.db.get_or_create_index(neo4j.Node, "Classes")
+        predicates = self.db.get_or_create_index(neo4j.Relationship, "Predicates")
+
+        parent = entities.get("name",parent_name)
+        child = entities.get("name",child_name)
+
+        if not (len(parent) == 0) and not (len(child) == 0):
+            print ("predicate",parent_name+" "+predicate_name+" "+child_name)
+            print predicates.get("predicate",parent_name+" "+predicate_name+" "+child_name)
+            predicates.remove("predicate",parent_name+" "+predicate_name+" "+child_name)
+            return True
+        else:
+            return False
 
     '''
     addObject()
@@ -37,7 +56,7 @@ class GermDatabaseConnection:
         obj_class = classes.get_or_create("name", obj_class_name, {"name":obj_class_name})
         obj_class.add_labels("class")
 
-        predicates.get_or_create("predicate",name, (entity, "IS-A", obj_class))
+        predicates.get_or_create("predicate",name + " CLASS", (entity, "IS-A", obj_class))
 
     '''
     addClass()
