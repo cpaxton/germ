@@ -1,33 +1,11 @@
 #include "predicator.h"
 
 /**
-  predicator_planning
+  germ_predicator
   Can generate the set of predicates that would be true for a given location.
   Also used to generate predicates based on current state.
  **/
-namespace predicator_planning {
-
-  /*
-   * createStatement()
-   * Simple helper function to create predicates with
-   */
-  PredicateStatement createStatement(std::string predicate, double value, std::string param1, std::string param2, std::string param3) {
-    PredicateStatement ps;
-    ps.predicate = predicate;
-    ps.params[0] = param1;
-    ps.params[1] = param2;
-    ps.value = value;
-
-    int num_params = 2;
-
-    if (param3.size() > 0) {
-      ++num_params;
-      ps.params[2] = param3;
-    }
-    ps.num_params = num_params;
-
-    return ps;
-  }
+namespace germ_predicator {
 
   /*
    * joint_state_callback()
@@ -46,7 +24,6 @@ namespace predicator_planning {
     XmlRpc::XmlRpcValue topics;
     XmlRpc::XmlRpcValue floating; // set of floating root joints that need to be updated
 
-
     nh_tilde.param("verbosity", verbosity, 0);
     nh_tilde.param("padding", padding, 0.01);
     nh_tilde.param("world_frame", world_frame, std::string("/world"));
@@ -54,8 +31,7 @@ namespace predicator_planning {
     // should we publish predicate messages?
     // or what?
     if(publish == true) {
-      pub = nh.advertise<predicator_msgs::PredicateList>("/predicator/input", 1000);
-      vpub = nh.advertise<predicator_msgs::ValidPredicates>("/predicator/valid_input", 1000);
+      pub = nh.advertise<predicator_msgs::PredicateList>("update_predicates", 1000);
     }
 
     nh_tilde.param("rel_x_threshold", rel_x_threshold, 0.1);

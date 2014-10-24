@@ -2,18 +2,15 @@
 #define _PP_UTILITY
 
 #include <unordered_map>
-#include <predicator_msgs/PredicateStatement.h>
-#include <predicator_msgs/PredicateSet.h>
-#include <predicator_msgs/PredicateList.h>
-#include <predicator_msgs/PredicateAssignment.h>
+#include <germ_msgs/PredicateInstance.h>
 #include <string>
 #include <functional>
 
 using std::string;
 using std::unordered_map;
-using namespace predicator_msgs;
+using namespace germ_msgs;
 
-namespace predicator_planning {
+namespace germ_predicator {
 
   struct Hash {
 
@@ -21,27 +18,23 @@ namespace predicator_planning {
 
     Hash() : hash_str() {}
 
-    size_t operator()(const PredicateStatement &msg) const {
+    size_t operator()(const PredicateInstance &msg) const {
 
-      size_t res = hash_str(msg.predicate);
-
-      for (unsigned int i = 0; i < msg.params.size(); ++i) {
-        res += hash_str(msg.params[i]) << (3*i);
-      }
+      size_t res = hash_str(msg.predicate.name);
+      res += hash_str(msg.parent.name) << 3;
+      res += hash_str(msg.child.name) << 6;
 
       return res;
     }
   };
 
   struct Equals {
-    bool operator()(const PredicateStatement &msg1,
-                    const PredicateStatement &msg2) const
+    bool operator()(const PredicateInstance &msg1,
+                    const PredicateInstance &msg2) const
     {
-      return msg1.predicate == msg2.predicate &&
-        //msg1.num_params == msg2.num_params &&
-        msg1.params[0] == msg2.params[0] &&
-        msg1.params[1] == msg2.params[1] &&
-        msg1.params[2] == msg2.params[2];
+      return msg1.predicate.name == msg2.predicate.name &&
+        msg1.parent.name == msg2.parent.name &&
+        msg1.child.name == msg2.child.name;
     }
   };
 }

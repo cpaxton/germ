@@ -24,9 +24,10 @@
 #include <sensor_msgs/JointState.h>
 
 // predicator
-#include <predicator_msgs/PredicateList.h>
-#include <predicator_msgs/PredicateStatement.h>
-#include <predicator_msgs/ValidPredicates.h>
+#include <germ_msgs/PredicateInstanceList.h>
+#include <germ_msgs/PredicateInstance.h>
+#include <germ_msgs/Predicate.h>
+#include <germ_msgs/Object.h>
 
 // boost includes
 #include <boost/bind/bind.hpp>
@@ -39,12 +40,35 @@ using robot_model::RobotModelPtr;
 using robot_state::RobotState;
 using collision_detection::CollisionRobot;
 
-namespace predicator_planning {
+namespace germ_predicator {
 
-  typedef std::unordered_map<predicator_msgs::PredicateStatement,
+  /**
+   * Predicate names
+   */
+  const std::string collision_predicates[] = {"TOUCHING", "NEAR-MESH"};
+  const std::string geometry_predicates[] = {"NEAR", "NEAR-XY", "ABOVE", "BELOW", "LEFT-OF", "RIGHT-OF", "IN-FRONT-OF", "IN-BACK-OF",
+    "WORLD-ABOVE", "WORLD-BELOW", "WORLD-LEFT-OF", "WORLD-RIGHT-OF", "WORLD-IN-FRONT-OF", "WORLD-IN-BACK-OF"};
+  const std::string reachable_predicates[] = {"IS-REACHABLE"};
+
+  /**
+   * Indices for finding names of predicates
+   */
+  const unsigned int NEAR_IDX = 0;
+  const unsigned int NEAR_XY_IDX = 1;
+  const unsigned int ABOVE_OFFSET = 0;
+  const unsigned int BELOW_OFFSET = 1;
+  const unsigned int LEFT_OFFSET = 2;
+  const unsigned int RIGHT_OFFSET = 3;
+  const unsigned int FRONT_OFFSET = 4;
+  const unsigned int BACK_OFFSET = 5;
+  const unsigned int LOCAL_REF_IDX = 2;
+  const unsigned int WORLD_REF_IDX = 8;
+
+
+  typedef std::unordered_map<germ_msgs::PredicateInstance,
           unsigned int,
-          predicator_planning::Hash,
-          predicator_planning::Equals> heuristic_map_t;
+          germ_predicator::Hash,
+          germ_predicator::Equals> heuristic_map_t;
 
   /*
    * joint_state_callback()
@@ -52,24 +76,25 @@ namespace predicator_planning {
    */
   void joint_state_callback(const sensor_msgs::JointState::ConstPtr &msg, RobotState *state);
 
-  /*
-   * createStatement()
-   * Simple helper function to create predicates with
+  /**
+   * ValueItem
+   * A value-type pair stored as extra information about an object or predicate
    */
-  PredicateStatement createStatement(std::string predicate, double value, std::string param1, std::string param2, std::string param3 = "");
- 
+  struct ValueItem {
+    std::string type;
+    std::string value;
+  }
 
   /**
    * Predicate
    * Simple internal representation of a predicate
    */
-  struct Predicate {
+  struct Predicate : std::map<std::string, ValueItem> {
     std::string predicate;
-    std::string param1;
-    std::string param2;
-    std::string param3;
+    std::string parent;
+    std::string child;
 
-    Predicate(std::string predicate, std::string param1, std::string param2, std::string param3);
+    Predicate(std::string predicate, std::string parent, std::string child);
   };
 
   /**
@@ -105,10 +130,6 @@ namespace predicator_planning {
 
 
     ros::Publisher pub;
-    ros::Publisher vpub;
-
-    // valid predicates message
-    predicator_msgs::ValidPredicates pval;
 
     /**
      * Create a PredicateContext()
@@ -158,19 +179,19 @@ namespace predicator_planning {
      * @param idx is the index of a particular PlanningScene.
      * When doing planning, we don't really need to recompute all of the world collisions, just the ones that might be changing.
      */
-    void addCollisionPredicates(PredicateList &list, std::vector<double> &heuristics, const std::vector<RobotState *> &states, unsigned int idx=~0);
+    void addCollisionPredicates(const std::vector<RobotState *> &states, unsigned int idx=~0);
 
     /**
      * addGeometryPredicates()
      * compute the set of geometry predicates
      */
-    void addGeometryPredicates(PredicateList &list, std::vector<double> &heuristic, const std::vector<RobotState *> &states);
+    void addGeometryPredicates(const std::vector<RobotState *> &states);
 
     /**
      * addReachabilityPredicates()
      * compute whether or not we can reach certain points or waypoints
      */
-    void addReachabilityPredicates(PredicateList &list, std::vector<double> &heuristics, const std::vector<RobotState *> &states);
+    void addReachabilityPredicates(const std::vector<RobotState *> &states);
 
     /**
      * getLinkTransform
@@ -191,7 +212,7 @@ namespace predicator_planning {
      * getHeuristic
      * Looks up a score from a vector of possible values
      */
-    double getHeuristic(const PredicateStatement &pred, const std::vector<double> &heuristics) const;
+    //double getHeuristic(const PredicateStatement &pred, const std::vector<double> &heuristics) const;
   };
 }
 

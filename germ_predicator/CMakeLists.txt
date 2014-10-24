@@ -19,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
   xacro
 )
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -91,7 +93,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES germ_predicator
-#  CATKIN_DEPENDS germ_msgs moveit_core moveit_msgs moveit_ros_perception moveit_ros_planning_interface shape_msgs std_srvs tf tf_conversion trajectory_msgs urdf urdfdom xacro
+  CATKIN_DEPENDS germ_msgs moveit_core moveit_msgs moveit_ros_perception moveit_ros_planning_interface shape_msgs std_srvs tf tf_conversion trajectory_msgs urdf xacro
 #  DEPENDS system_lib
 )
 
@@ -107,21 +109,24 @@ include_directories(
 )
 
 ## Declare a cpp library
-# add_library(germ_predicator
-#   src/${PROJECT_NAME}/germ_predicator.cpp
-# )
+add_library(predicator
+   src/${PROJECT_NAME}/predicator.cpp
+   src/${PROJECT_NAME}/predicator.h
+   src/${PROJECT_NAME}/utility.hpp
+)
 
 ## Declare a cpp executable
-# add_executable(germ_predicator_node src/germ_predicator_node.cpp)
+add_executable(moveit_predicator_node src/germ_predicator/moveit_predicator_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(germ_predicator_node germ_predicator_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(germ_predicator_node
-#   ${catkin_LIBRARIES}
-# )
+ target_link_libraries(moveit_predicator_node
+   ${catkin_LIBRARIES}
+   predicator
+)
 
 #############
 ## Install ##
