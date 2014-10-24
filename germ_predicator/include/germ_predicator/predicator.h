@@ -65,11 +65,6 @@ namespace germ_predicator {
   const unsigned int WORLD_REF_IDX = 8;
 
 
-  typedef std::unordered_map<germ_msgs::PredicateInstance,
-          unsigned int,
-          germ_predicator::Hash,
-          germ_predicator::Equals> heuristic_map_t;
-
   /*
    * joint_state_callback()
    * Update the robot state variable values
@@ -119,15 +114,8 @@ namespace germ_predicator {
     double padding; // how much padding do we give robot links?
     int verbosity; // how much should get printed for debugging purposes
 
-    /*
-     * heuristic_indices
-     * Stores the locations in a double array of the indices for different features (heuristics)
-     */
-    heuristic_map_t heuristic_indices;
-
     std::map<std::string, std::string> floating_frames;
     std::string world_frame;
-
 
     ros::Publisher pub;
 
@@ -137,11 +125,6 @@ namespace germ_predicator {
      * This will produce the low-level world predicates
      */
     PredicateContext(bool publish);
-
-    /**
-     * numHeuristics()
-     */
-    size_t numHeuristics() const;
 
     /**
      * updateWaypoints()
@@ -199,20 +182,6 @@ namespace germ_predicator {
      * If so, compose with TF frame
      */
     Eigen::Affine3d getLinkTransform(const RobotState *state, const std::string &linkName) const;
-
-
-    /**
-     * updateIndices()
-     * Records where the values we can use as heuristics are going to be stored.
-     * May also look at things like waypoints, etc.
-     */
-    void updateIndices();
-
-    /**
-     * getHeuristic
-     * Looks up a score from a vector of possible values
-     */
-    //double getHeuristic(const PredicateStatement &pred, const std::vector<double> &heuristics) const;
   };
 }
 

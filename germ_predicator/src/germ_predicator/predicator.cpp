@@ -1,4 +1,4 @@
-#include "predicator.h"
+#include <germ_predicator/predicator.h>
 
 /**
   germ_predicator
@@ -31,7 +31,7 @@ namespace germ_predicator {
     // should we publish predicate messages?
     // or what?
     if(publish == true) {
-      pub = nh.advertise<predicator_msgs::PredicateList>("update_predicates", 1000);
+      pub = nh.advertise<germ_msgs::PredicateInstanceList>("update_predicates", 1000);
     }
 
     nh_tilde.param("rel_x_threshold", rel_x_threshold, 0.1);
@@ -73,8 +73,8 @@ namespace germ_predicator {
       ROS_WARN("An unequal number of joint state and robot topics was provided!");
     }
 
+#ifdef _PREDICATOR_
     // read in topics and descriptions
-    /*
     for(unsigned int i = 0; i < descriptions.size(); ++i) {
       std::string desc;
       std::string topic;
@@ -96,8 +96,6 @@ namespace germ_predicator {
       scene->getCollisionRobotNonConst()->setPadding(padding);
       scene->propogateRobotPadding();
 
-      pval.assignments.push_back(model->getName());
-
       // get all link names as possible assignments
       for(typename std::vector<std::string>::const_iterator it = model->getLinkModelNames().begin();
           it != model->getLinkModelNames().end();
@@ -107,7 +105,7 @@ namespace germ_predicator {
       }
 
       robots.push_back(model);
-      */
+      
       scenes.push_back(scene);
 
       RobotState *state = new RobotState(model);
@@ -177,109 +175,10 @@ namespace germ_predicator {
       }
       // -----------------------------------------------------------
     }
+#endif
 
     if (verbosity > 0) {
       ROS_INFO("creating list of heuristic indices for possible values");
-    }
-    updateIndices();
-  }
-
-  /**
-   * checkAndUpdate
-   * helper function
-   */
-  static inline void checkAndUpdate(const PredicateStatement &pred,
-                                    heuristic_map_t &indices,
-                                    unsigned int &next_idx)
-  {
-    if (indices.find(pred) == indices.end()) {
-      indices[pred] = next_idx++;
-      //std::cout << next_idx << " ";
-    }
-  }
-
-  /**
-   * updateIndices()
-   * Records where the values we can use as heuristics are going to be stored.
-   * May also look at things like waypoints, etc.
-   */
-  void PredicateContext::updateIndices() {
-    unsigned int idx = 0;
-    unsigned int i = 0;
-    for(typename std::vector<RobotState *>::const_iterator it = states.begin();
-        it != states.end();
-        ++it, ++i)
-    {
-
-      // get the list of joints for the robot state
-      for (typename std::vector<std::string>::const_iterator link1 = (*it)->getRobotModel()->getLinkModelNames().begin();
-           link1 != (*it)->getRobotModel()->getLinkModelNames().end();
-           ++link1)
-      {
-        if (link1->compare(std::string("world")) == 0) {
-          continue;
-        }
-
-        //std::cout << *link1 << std::endl;
-
-        // access world coordinates
-        // NOTE: does not work for the ring yet!
-        Eigen::Affine3d tf1 = getLinkTransform(*it, *link1);
-
-        // loop over the other objects in the world
-        // this does NOT include waypoints or anything like that -- we need a separate loop
-        // the second loop can handle abstract entities like these
-        unsigned int j = 0;
-        for(typename std::vector<RobotState *>::const_iterator it2 = states.begin();
-            it2 != states.end();
-            ++it2, ++j)
-        {
-
-          PredicateStatement near_mesh = createStatement("near_mesh",0,(*it)->getRobotModel()->getName(),(*it2)->getRobotModel()->getName());
-          PredicateStatement touching_robot = createStatement("touching",0,(*it)->getRobotModel()->getName(),(*it2)->getRobotModel()->getName());
-
-          //std::cout << heuristic_indices.size() << ", idx = " << idx << std::endl;
-
-          checkAndUpdate(near_mesh, heuristic_indices, idx);
-          checkAndUpdate(touching_robot, heuristic_indices, idx);
-
-          //std::cout << (*it)->getRobotModel()->getName() << ", " << (*it2)->getRobotModel()->getName() << std::endl;
-
-          // loop over the non-world links of this object
-          // get the list of joints for the robot state
-          for (typename std::vector<std::string>::const_iterator link2 = (*it2)->getRobotModel()->getLinkModelNames().begin();
-               link2 != (*it2)->getRobotModel()->getLinkModelNames().end();
-               ++link2)
-          {
-            if (link2->compare(std::string("world")) == 0) {
-              continue;
-            }
-
-            // create the predicates
-            PredicateStatement left = createStatement("left_of",0,*link1,*link2,"world");
-            PredicateStatement right = createStatement("right_of",0,*link1,*link2,"world");
-            PredicateStatement front = createStatement("in_front_of",0,*link1,*link2,"world");
-            PredicateStatement back = createStatement("behind",0,*link1,*link2,"world");
-            PredicateStatement up = createStatement("above",0,*link1,*link2,"world");
-            PredicateStatement down = createStatement("below",0,*link1,*link2,"world");
-            PredicateStatement touching = createStatement("touching",0,*link1,*link2);
-            PredicateStatement near = createStatement("near",0,*link1,*link2);
-            PredicateStatement near_xy = createStatement("near_xy",0,*link1,*link2);
-
-            checkAndUpdate(left, heuristic_indices, idx);
-            checkAndUpdate(right, heuristic_indices, idx);
-            checkAndUpdate(front, heuristic_indices, idx);
-            checkAndUpdate(back, heuristic_indices, idx);
-            checkAndUpdate(up, heuristic_indices, idx);
-            checkAndUpdate(down, heuristic_indices, idx);
-            checkAndUpdate(touching, heuristic_indices, idx);
-            checkAndUpdate(near, heuristic_indices, idx);
-            checkAndUpdate(near_xy, heuristic_indices, idx);
-
-            //std::cout << *link1 << ", " << *link2 << std::endl;
-          }
-        }
-      }
     }
   }
 
@@ -354,32 +253,12 @@ namespace germ_predicator {
   }
 
   /**
-   * updateHeuristics
-   * helper function to store heuristic values
-   */
-  static inline void updateHeuristics(const PredicateStatement &pred, const heuristic_map_t &indices, std::vector<double> &heuristics) {
-    if (indices.find(pred) == indices.end()) {
-      ROS_ERROR("(UPDATE) Failed to look up predicate \"%s\" with arguments (%s, %s, %s)", pred.predicate.c_str(),
-                pred.params[0].c_str(),
-                pred.params[1].c_str(),
-                pred.params[2].c_str());
-    } else if (indices.at(pred) > heuristics.size()) {
-      ROS_ERROR("(UPDATE) Indexing error from predicate \"%s\" with arguments (%s, %s, %s)", pred.predicate.c_str(),
-                pred.params[0].c_str(),
-                pred.params[1].c_str(),
-                pred.params[2].c_str());
-      ROS_ERROR("index = %u, length=%lu", indices.at(pred), heuristics.size());
-    }
-    heuristics[indices.at(pred)] = pred.value;
-  }
-
-  /**
    * addCollisionPredicates()
    * main collision checking loop
    * checks for all pairs of objects, determines collisions and distances
    * publishes the relationships between all of these objects
    */
-  void PredicateContext::addCollisionPredicates(PredicateList &output, std::vector<double> &heuristics, const std::vector<RobotState *> &states, unsigned int idx) {
+  void PredicateContext::addCollisionPredicates(const std::vector<RobotState *> &states, unsigned int idx) {
 
     unsigned i = 0;
     for(typename std::vector<PlanningScene *>::iterator it1 = scenes.begin();
@@ -419,20 +298,14 @@ namespace germ_predicator {
         robot1->checkOtherCollision(req, res, *states[i], *robot2, *states[j]);
         double dist = robot1->distanceOther(*states[i], *robot2, *states[j]);
 
+        /*
         PredicateStatement ps = createStatement("touching", -1.0 * dist,
                                                 robot1->getRobotModel()->getName(),
                                                 robot2->getRobotModel()->getName());
         PredicateStatement ps2 = createStatement("touching", -1.0 * dist,
                                                  robot2->getRobotModel()->getName(),
                                                  robot1->getRobotModel()->getName());
-
-        updateHeuristics(ps, heuristic_indices, heuristics);
-        updateHeuristics(ps2, heuristic_indices, heuristics);
-
-        if (dist <= 0) {
-          output.statements.push_back(ps);
-          output.statements.push_back(ps2);
-        }
+        */
 
         if (verbosity > 4) {
           std::cout << res.contacts.size() << " contacts found" << std::endl;
@@ -443,6 +316,7 @@ namespace germ_predicator {
             cit != res.contacts.end(); 
             ++cit)
         {
+          /*
           // write the correct predicate
           predicator_msgs::PredicateStatement ps;
           ps.predicate = "touching";
@@ -460,9 +334,8 @@ namespace germ_predicator {
           ps2.params[0] = cit->first.second;
           ps2.params[1] = cit->first.first;
           output.statements.push_back(ps2);
+          */
 
-          updateHeuristics(ps, heuristic_indices, heuristics);
-          updateHeuristics(ps2, heuristic_indices, heuristics);
         }
 
         if (verbosity > 1) {
@@ -476,59 +349,26 @@ namespace germ_predicator {
   }
 
   /**
-   * numHeuristics()
-   */
-  size_t PredicateContext::numHeuristics() const {
-    return heuristic_indices.size();
-  }
-
-  /**
-   * getHeuristic
-   * Looks up a score from a vector of possible values
-   */
-  double PredicateContext::getHeuristic(const PredicateStatement &pred, const std::vector<double> &heuristics) const {
-    if (heuristic_indices.find(pred) == heuristic_indices.end()) {
-      ROS_ERROR("(GET) Failed to lookup predicate \"%s\" with arguments (%s, %s, %s)", pred.predicate.c_str(),
-                pred.params[0].c_str(),
-                pred.params[1].c_str(),
-                pred.params[2].c_str());
-      return 0;
-    } else if (heuristic_indices.at(pred) > heuristics.size()) {
-      ROS_ERROR("(GET) Indexing error from predicate \"%s\" with arguments (%s, %s, %s)", pred.predicate.c_str(),
-                pred.params[0].c_str(),
-                pred.params[1].c_str(),
-                pred.params[2].c_str());
-      ROS_ERROR("index = %u, length=%lu", heuristic_indices.at(pred), heuristics.size());
-      return 0;
-    }
-    return heuristics.at(heuristic_indices.at(pred));
-  }
-
-  /**
    * tick()
    * Run one iteration of the predicator computations 
    */
   void PredicateContext::tick() {
-    predicator_msgs::PredicateList output;
-    output.pheader.source = ros::this_node::getName();
-
-    std::vector<double> heuristics;
-    heuristics.resize(heuristic_indices.size());
+    germ_msgs::PredicateInstanceList output;
+    output.info.name = ros::this_node::getName();
 
     updateRobotStates();
-    addCollisionPredicates(output, heuristics, states);
-    addGeometryPredicates(output, heuristics, states);
-    addReachabilityPredicates(output, heuristics, states);
+    addCollisionPredicates(states);
+    addGeometryPredicates(states);
+    addReachabilityPredicates(states);
 
     pub.publish(output);
-    vpub.publish(pval);
   }
 
   /**
    * addReachabilityPredicates()
    * compute whether or not we can reach certain points or waypoints
    */
-  void PredicateContext::addReachabilityPredicates(PredicateList &list, std::vector<double> &heuristics, const std::vector<RobotState *> &states) {
+  void PredicateContext::addReachabilityPredicates(const std::vector<RobotState *> &states) {
     // update list of reachable waypoints
     // use a service call to predicator to get the relevant waypoints
 
@@ -561,7 +401,7 @@ namespace germ_predicator {
    ring1/ring_link 
    world stage_link 
    */
-  void PredicateContext::addGeometryPredicates(PredicateList &list, std::vector<double> &heuristics, const std::vector<RobotState *> &states) {
+  void PredicateContext::addGeometryPredicates(const std::vector<RobotState *> &states) {
 
     unsigned int i = 0;
     for(typename std::vector<RobotState *>::const_iterator it = states.begin();
@@ -621,6 +461,7 @@ namespace germ_predicator {
             double dist_xy = sqrt((xdiff*xdiff) + (ydiff*ydiff)); // compute xy distance only
             double dist = sqrt((xdiff*xdiff) + (ydiff*ydiff) + (zdiff*zdiff)); // compute xyz distance
 
+            /*
             PredicateStatement left = createStatement("left_of",xdiff - rel_x_threshold,*link1,*link2,"world");
             PredicateStatement right = createStatement("right_of",-1.0 * xdiff - rel_x_threshold,*link1,*link2,"world");
             PredicateStatement front = createStatement("in_front_of",ydiff - rel_y_threshold,*link1,*link2,"world");
@@ -629,16 +470,9 @@ namespace germ_predicator {
             PredicateStatement down = createStatement("below",-1.0 * zdiff - rel_z_threshold,*link1,*link2,"world");
             PredicateStatement near = createStatement("near",-1.0 * dist + near_3d_threshold,*link1,*link2);
             PredicateStatement near_xy = createStatement("near_xy",-1.0 * dist_xy + near_2d_threshold,*link1,*link2);
+            */
 
-            updateHeuristics(left, heuristic_indices, heuristics);
-            updateHeuristics(right, heuristic_indices, heuristics);
-            updateHeuristics(front, heuristic_indices, heuristics);
-            updateHeuristics(back, heuristic_indices, heuristics);
-            updateHeuristics(up, heuristic_indices, heuristics);
-            updateHeuristics(down, heuristic_indices, heuristics);
-            updateHeuristics(near, heuristic_indices, heuristics);
-            updateHeuristics(near_xy, heuristic_indices, heuristics);
-
+            /*
             // x is left/right
             if (xdiff < -1.0 * rel_x_threshold){
               list.statements.push_back(right);
@@ -667,8 +501,7 @@ namespace germ_predicator {
             if (dist_xy < near_2d_threshold) {
               list.statements.push_back(near_xy);
             }
-
-            // somehow we need to do this from other points of view as well... but maybe not for now
+            */
           }
         }
       }

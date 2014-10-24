@@ -5,7 +5,7 @@
 #include <iostream>
 
 // predicator stuff
-#include "predicator.h"
+#include <germ_predicator/predicator.h>
 
 int main(int argc, char **argv) {
 
