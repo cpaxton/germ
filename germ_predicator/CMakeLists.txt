@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   shape_msgs
   std_srvs
   tf
+  tf_conversions
   trajectory_msgs
   urdf
   urdfdom
@@ -41,7 +42,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES predicator
-  CATKIN_DEPENDS germ_msgs moveit_core moveit_msgs moveit_ros_perception moveit_ros_planning_interface shape_msgs std_srvs tf tf_conversion trajectory_msgs urdf xacro
+  CATKIN_DEPENDS germ_msgs moveit_core moveit_msgs moveit_ros_perception moveit_ros_planning_interface shape_msgs std_srvs tf tf_conversions trajectory_msgs urdf xacro
 #  DEPENDS system_lib
 )
 
@@ -114,15 +115,3 @@ add_executable(moveit_predicator_node src/germ_predicator/moveit_predicator_node
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_germ_predicator.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
