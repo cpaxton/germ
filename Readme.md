@@ -6,6 +6,8 @@ GERM (Graphical Entity-relationship Model) is the successor to Predicator I am b
 
 GERM stores entity and class information as a series of nodes in a graph, connected by predicates. Predicates are different relationships, with some kind of task-relevant meaning.
 
+There is also a specific format for world information that is associated with GERM, described later in this document. GERM worlds provide simple information for constant relationships between objects that can be used to initialize a graph database. They also provide TF frames and other infromation necessary to compute predicates.
+
 **Why is this not a fork of Predicator?** Mostly because I don't want it to work the same way Predicator does. Predicator is closely tied to the current implementation of CoSTAR; it is used as a blackboard by many parts of the CoSTAR software.
 
 ## Packages
@@ -67,6 +69,8 @@ This predicate indicates that *Parent* is to the left of *Child*, from
 ### World Specification
 
 World information is stored in YAML files that can be parsed by the GERM ROS interface in order to initialize a graphical representation of the world. A few of these YAML files will be stored in `germ_ros/world`.
+
+Specification is divided between classes, entities, and predicates.
 
 #### Entity Properties
 

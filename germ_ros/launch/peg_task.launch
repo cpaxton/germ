@@ -1,0 +1,12 @@
+<launch>
+  <group ns="germ">
+
+    <group ns="definition">
+      <rosparam command="load" file="$(find germ_ros)/world/peg_task.yaml"/>
+    </group>
+
+    <node name="germ_ros_interface" pkg="germ_ros" type="ros_interface.py"/>
+    <node name="germ_graph_interface" pkg="germ_neo4j" type="interface.py"/>
+
+  </group>
+</launch>
