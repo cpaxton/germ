@@ -19,12 +19,34 @@ def get_properties(props, name=""):
         if t == "float":
             data[k] = float(v)
         else:
-            if not t == "string":
+            if not t == "string" and not t == "tf_frame":
                 rospy.logwarn("Unrecognized type: %s"%(t))
             data[k] = v
 
     if not len(name) == 0:
         data["name"] = name
+
+def yaml_get_properties(obj):
+    data = {}
+
+    if "properties" in obj:
+        for elem in obj["properties"]:
+            print elem
+            k = elem["key"]
+            v = elem["value"]
+            t = elem["type"]
+
+            if t == "float":
+                data[k] = float(v)
+            else:
+                if not t == "string" and not t == "tf_frame":
+                    rospy.logwarn("Unrecognized type: %s"%(t))
+                data[k] = v
+
+    if "name" in obj:
+        data["name"] = obj["name"]
+
+    return data
 
 class GermROSListener:
     
@@ -34,6 +56,31 @@ class GermROSListener:
         rospy.Subscriber("add_class", sm.String, self.add_class_cb)
         rospy.Subscriber("add_object", gm.Object, self.add_obj_cb)
         rospy.Subscriber("update_predicates", gm.PredicateInstanceList, self.update_predicates_cb)
+
+        # get the set of definitions
+        defs = rospy.get_param("definitions")
+        print defs
+        print type(defs)
+
+        class_defs = []
+        entity_defs = []
+        predicate_defs = []
+        for name, subset in defs.items():
+            print "Loading from subset \"%s\""%(name)
+            class_defs = class_defs + subset["classes"]
+            entity_defs = entity_defs + subset["entities"]
+            predicate_defs = predicate_defs + subset["predicates"]
+
+        for obj_class in class_defs:
+            self.dbc.addClass(obj_class)
+
+        for obj in entity_defs:
+            self.dbc.addObject(obj["name"], obj["class"], yaml_get_properties(obj))
+
+        for pred in predicate_defs:
+            if not self.dbc.addPredicateInstance(pred["parent"], pred["child"], pred["name"], yaml_get_properties(pred)):
+                rospy.logerr("Failed to add predicate!")
+                rospy.logerr("Predicate = " + pred)
 
     '''
     add_obj_cb()

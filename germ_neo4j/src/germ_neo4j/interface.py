@@ -69,7 +69,7 @@ class GermDatabaseConnection:
     def addClass(self, class_name):
         classes = self.db.get_or_create_index(neo4j.Node, "Classes")
 
-        obj_class = classes.get_or_create("name", class_name)
+        obj_class = classes.get_or_create("name", class_name, {"name":class_name})
         obj_class.add_labels("class")
 
     def __init__(self, db_address="http://localhost:7474/db/data"):
