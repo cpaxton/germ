@@ -33,7 +33,7 @@ This package provides the message types we want.
 
 ### GERM ROS
 
-The package `germ_ros` provides a connection between GERM's Neo4j back and and different application-specific modules via ROS messages.
+The package `germ_ros` provides a connection between GERM's Neo4j back and and different application-specific modules via ROS messages. It also contains GERM world definitions and launch files to bring up the GERM ROS interface.
 
 Run this with:
 
@@ -42,6 +42,16 @@ rosrun germ_ros ros_interface.py __ns:=germ
 ```
 
 You can change the namespace to whatever you want, or leave it empty. The ROS interface script also takes two other arguments: `_purge:=true` will clear the graph database on startup, and `_address:=XXX` will set the address to use when connecting to the database.
+
+#### Launch Files
+
+There is currently just one launch file set up for GERM. This can be brought up with:
+
+```bash
+roslaunch germ_ros peg_task.launch
+```
+
+This adds the GERM definitions for a set of entities related to the peg task world, as of 10/24/2014.
 
 ## Glossary
 
@@ -61,8 +71,35 @@ Predicates represent some binary truth about the world. They all take the form *
 
 ##### LEFT-OF
 
-This predicate indicates that *Parent* is to the left of *Child*, from
+This predicate indicates that *Parent* is to the left of *Child*, from the frame of reference of *Child*.
 
+##### RIGHT-OF
+
+##### ABOVE
+
+##### BELOW
+
+##### IN-FRONT-OF
+
+##### IN-BACK-OF
+
+##### WORLD-LEFT-OF
+
+##### WORLD-RIGHT-OF
+
+##### WORLD-ABOVE
+
+##### WORLD-IN-FRONT-OF
+
+##### WORLD-IN-BACK-OF
+
+#### NEAR
+
+#### NEAR-MESH
+
+#### NEAR-XY
+
+#### TOUCHING
 
 ## Conventions
 

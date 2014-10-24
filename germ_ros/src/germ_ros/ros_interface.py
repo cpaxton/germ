@@ -57,6 +57,8 @@ class GermROSListener:
         rospy.Subscriber("add_object", gm.Object, self.add_obj_cb)
         rospy.Subscriber("update_predicates", gm.PredicateInstanceList, self.update_predicates_cb)
 
+
+    def load(self):
         # get the set of definitions
         defs = rospy.get_param("definitions")
         print defs
@@ -131,7 +133,7 @@ if __name__ == "__main__":
     rospy.init_node("germ_ros_interface")
 
     address = rospy.get_param("~db_address","http://localhost:7474/db/data")
-    purge = rospy.get_param("~purge","false")
+    purge = rospy.get_param("~purge",False)
 
     rate = rospy.Rate(30)
 
@@ -139,11 +141,13 @@ if __name__ == "__main__":
 
         gi = GermROSListener(address)
 
-        if purge == "true":
+        if purge == True or purge == "true":
             rospy.logwarn("Deleting current database! Hope you backed up anything important!")
             gi.dbc.purge()
-        elif not purge == "false":
-            rospy.logwarn("Unknown value for argument \"purge\":"+purge)
+        elif not purge == False and not purge == "false":
+            ROSInterruptExceptiony.logwarn('''Unknown value for argument "purge":''' + str(purge))
+
+        gi.load()
 
         while not rospy.is_shutdown():
             rate.sleep()

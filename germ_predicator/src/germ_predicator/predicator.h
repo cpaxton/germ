@@ -83,7 +83,7 @@ namespace germ_predicator {
   struct ValueItem {
     std::string type;
     std::string value;
-  }
+  };
 
   /**
    * Predicate

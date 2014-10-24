@@ -1,0 +1,34 @@
+wam_setup:
+  classes: [BarrettWAM, Stage]
+  entities:
+    - name: wam1
+      class: BarrettWAM
+      properties:
+        - key: description
+          type: string
+          value: /gazebo/barrett_manager/robot_description
+        - key: joint_states_topic
+          type: string
+          value: /gazebo/barrett_manager/joint_states
+    - name: wam2
+      class: BarrettWAM
+      properties:
+        - key: description
+          type: string
+          value: /gazebo/w2barrett_manager/robot_description
+        - key: joint_states_topic
+          type: string
+          value: /gazebo/w2barrett_manager/joint_states
+    - name: stage
+      class: Stage
+      properties:
+        - key: description
+          type: string
+          value: /stage_model
+  predicates:
+    - name: MOUNTED-ON
+      parent: wam1
+      child: stage
+    - name: MOUNTED-ON
+      parent: wam2
+      child: stage

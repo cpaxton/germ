@@ -1,15 +1,18 @@
 <launch>
 
   <arg name="output" default="screen"/>
+  <arg name="purge" default="false"/>
 
   <group ns="germ">
 
     <group ns="definitions">
       <rosparam command="load" file="$(find germ_ros)/world/peg_task.yaml"/>
+      <rosparam command="load" file="$(find germ_ros)/world/wam_setup.yaml"/>
     </group>
 
-    <node name="germ_ros_interface" pkg="germ_ros" type="ros_interface.py" output="$(arg output)"/>
-    <node name="germ_graph_interface" pkg="germ_neo4j" type="interface.py"/>
+    <node name="germ_ros_interface" pkg="germ_ros" type="ros_interface.py" output="$(arg output)">
+      <param name="purge" value="$(arg purge)"/>
+    </node>
 
   </group>
 </launch>

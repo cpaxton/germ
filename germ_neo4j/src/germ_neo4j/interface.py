@@ -72,6 +72,9 @@ class GermDatabaseConnection:
         obj_class = classes.get_or_create("name", class_name, {"name":class_name})
         obj_class.add_labels("class")
 
+    def purge(self):
+        self.db.clear()
+
     def __init__(self, db_address="http://localhost:7474/db/data"):
         self.db = neo4j.GraphDatabaseService(db_address)
 
