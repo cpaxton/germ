@@ -16,6 +16,19 @@ There is also a specific format for world information that is associated with GE
 
 This package contains the code to produce predicates from object relationship information. It is written in C++ and uses the Germ ROS messages to communicate to the database.
 
+It reads entity definitions from `./definitions/`, and so it should be started up in the same namespace as other code (by convention, all GERM nodes are grouped together in a `germ` namespace).
+
+This node will read two categories of configuration settings: **robots** and **task**. In the future there may be a way to define additional sets of configuration settings. The reason configuration settings are grouped like this is for code reusability: as we add more data describing, say, the robots, we can reuse them across a larger pool of example tasks.
+
+#### Unique Properties
+
+Predicator uses some specific properties, defined for some subset of entities.
+
+  - **tf**: the TF coordinate frame representing the entity's position relative to the world frame.
+  - **joint_states_topic**: the ROS topic giving the joint states of the robot/object.
+  - **description**: the name of the parameter storing the URDF for the robot.
+  - **floating_frame**: if the object is not rigidly attached to the world, we may need to manually keep its position up to date (not sure why). This is just the root link of such objects.
+
 ### GERM Neo4j
 
 The `germ_neo4j` package is the interface to the Neo4j database back-end.
