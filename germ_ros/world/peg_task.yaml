@@ -10,6 +10,9 @@ task:
         - key: tf
           type: tf_frame
           value: /ring1
+        - key: floating_frame
+          type: tf_frame
+          value: /ring1/ring_link
     - name: peg1
       class: Peg
       properties:
