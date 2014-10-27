@@ -1,4 +1,4 @@
-peg_task:
+task:
   classes: [Ring, Peg, PegBase, PegShaft]
   entities:
     - name: ring1

@@ -109,6 +109,15 @@ World information is stored in YAML files that can be parsed by the GERM ROS int
 
 Specification is divided between classes, entities, and predicates.
 
+#### Categories
+
+World specifications are grouped into categories. These categories can be called anything; they are designed to group certain code for reusability. By default, we use two categories:
+
+  - The **robots** category stores information on the robot or robots being used for a task, and other invariant aspects of the world.
+  - The **task** category stores information on the task-specific objects. For a constuction task, for example, this would include the different bars and blocks used to build a structure.
+
+Example worlds are stored in `germ_ros/world/`.
+
 #### Entity Properties
 
 Entities have a few specific properties to note.
