@@ -24,7 +24,7 @@ namespace germ_predicator {
     XmlRpc::XmlRpcValue topics;
     XmlRpc::XmlRpcValue floating; // set of floating root joints that need to be updated
 
-    nh_tilde.param("verbosity", verbosity, 0);
+    nh_tilde.param("verbosity", verbosity, 1);
     nh_tilde.param("padding", padding, 0.01);
     nh_tilde.param("world_frame", world_frame, std::string("/world"));
 
@@ -40,37 +40,61 @@ namespace germ_predicator {
     nh_tilde.param("near_2D_threshold", near_2d_threshold, 0.2);
     nh_tilde.param("near_3D_threshold", near_3d_threshold, 0.2);
 
-    if(nh_tilde.hasParam("description_list")) {
-      nh_tilde.param("description_list", descriptions, descriptions);
-    } else {
-      ROS_ERROR("No list of robot description parameters!");
-      exit(-1);
-    }
+    std::vector<std::string> category_list;
+    category_list.push_back("robots");
+    category_list.push_back("task");
 
-    if(nh_tilde.hasParam("frames")) {
-      nh_tilde.param("frames", frames_list, frames_list);
-    } else {
-      ROS_ERROR("No list of frames for geometryic predicates!");
-      exit(-1);
-    }
+    std::vector<germ_ros::Entity> entities = germ_ros::loadEntities("",category_list);
 
-    if(nh_tilde.hasParam("joint_state_topic_list")) {
-      nh_tilde.param("joint_state_topic_list", topics, topics);
-    } else {
-      ROS_ERROR("No list of joint state topics!");
-      exit(-1);
-    }
+    // parse through specified entities
+    for (unsigned int i = 0; i < entities.size(); ++i) {
+      if(entities[i].data.find("description") != entities[i].data.end()) {
+        std::string desc = entities[i].data["description"];
 
-    bool load_floating = false;
-    if(nh_tilde.hasParam("floating_root_list")) {
-      nh_tilde.param("floating_root_list", floating, floating);
-      load_floating = true;
-    } else {
-      ROS_INFO("No list of robots with floating root joints given.");
-    }
+        if(verbosity > 0) {
+          ROS_INFO("Entity %d robot description parameter: %s", i, desc.c_str());
+        }
 
-    if(descriptions.size() != topics.size()) {
-      ROS_WARN("An unequal number of joint state and robot topics was provided!");
+        try {
+          // create a robot model with state desc
+          robot_model_loader::RobotModelLoader robot_model_loader(desc);
+          ROS_INFO("Loaded model!")
+
+          robot_model::RobotModelPtr model = robot_model_loader.getModel();
+          PlanningScene *scene = new PlanningScene(model);
+          scene->getCollisionRobotNonConst()->setPadding(padding);
+          scene->propogateRobotPadding();
+
+          // store robot information
+          robots.push_back(model);
+          scenes.push_back(scene);
+          RobotState *state = new RobotState(model);
+          states.push_back(state);
+
+          if(entities[i].data.find("joint_states_topic") != entities[i].data.end()) {
+            std::string topic = entities[i].data["joint_states_topic"];
+
+            if(verbosity > 0) {
+              ROS_INFO("Entity %d robot description parameter: %s", i, topic.c_str());
+            }
+
+            // create the subscriber
+            subs.push_back(nh.subscribe<sensor_msgs::JointState>
+                           (topic, 1000,
+                            boost::bind(joint_state_callback, _1, state)));
+          } else {
+            ROS_WARN("No joint states topic corresponding to description %s!", desc.c_str());
+          }
+
+        } catch (std::exception ex) {
+          std::cerr << ex.what() << std::endl;
+        }
+
+      } else {
+        ROS_WARN("No robot description parameter defined for entity %d (name=%s, class=%s)!", i, entities[i].name.c_str(), entities[i].obj_class.c_str());
+      }
+
+
     }
 
 #ifdef _PREDICATOR_
@@ -89,12 +113,16 @@ namespace germ_predicator {
         continue;
       }
 
-      // create a robot model with state desc
-      robot_model_loader::RobotModelLoader robot_model_loader(desc);
-      robot_model::RobotModelPtr model = robot_model_loader.getModel();
-      PlanningScene *scene = new PlanningScene(model);
-      scene->getCollisionRobotNonConst()->setPadding(padding);
-      scene->propogateRobotPadding();
+      try {
+        // create a robot model with state desc
+        robot_model_loader::RobotModelLoader robot_model_loader(desc);
+        robot_model::RobotModelPtr model = robot_model_loader.getModel();
+        PlanningScene *scene = new PlanningScene(model);
+        scene->getCollisionRobotNonConst()->setPadding(padding);
+        scene->propogateRobotPadding();
+      } catch (std::exception ex) {
+        std::cerr << ex.show() << std::endl;
+      }
 
       // get all link names as possible assignments
       for(typename std::vector<std::string>::const_iterator it = model->getLinkModelNames().begin();
@@ -154,6 +182,7 @@ namespace germ_predicator {
         floating_frames[id] = frame;
       }
     }
+#endif
 
     // print out information on all the different joints
     unsigned int i = 0;
@@ -174,11 +203,6 @@ namespace germ_predicator {
         states[i]->printStateInfo(std::cout);
       }
       // -----------------------------------------------------------
-    }
-#endif
-
-    if (verbosity > 0) {
-      ROS_INFO("creating list of heuristic indices for possible values");
     }
   }
 
