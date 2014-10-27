@@ -26,10 +26,12 @@ It contains code that creates classes, entities, and predicates in a connected N
 
 This package provides the message types we want.
 
-*Object*: defines a single entity in the world, with a name, class, and optional properties.
-*Properties*: defines a set of typed key/value pairs for an entity or predicate.
-*Predicate*: message type describing a relationship between two entities, an entity and a class, or two classes.
-*PredicateInstance*: describes a specific instantiation of a predicate as a relationship between two specific entities or classes.
+  - **Object**: defines a single entity in the world, with a name, class, and optional properties.
+  - **Properties**: defines a set of typed key/value pairs for an entity or predicate.
+  - **Predicate**: message type describing a relationship between two entities, an entity and a class, or two classes.
+  - **PredicateInstance**: describes a specific instantiation of a predicate as a relationship between two specific entities or classes.
+  - **PredicateInstanceList**: contains an entire set of instantiated predicates
+  - **SourceInfo**: contains information regarding the origin (ROS node) that is producing predicates
 
 ### GERM ROS
 
