@@ -58,7 +58,7 @@ namespace germ_predicator {
         try {
           // create a robot model with state desc
           robot_model_loader::RobotModelLoader robot_model_loader(desc);
-          ROS_INFO("Loaded model!")
+          ROS_INFO("Loaded model!");
 
           robot_model::RobotModelPtr model = robot_model_loader.getModel();
           PlanningScene *scene = new PlanningScene(model);
@@ -84,6 +84,21 @@ namespace germ_predicator {
                             boost::bind(joint_state_callback, _1, state)));
           } else {
             ROS_WARN("No joint states topic corresponding to description %s!", desc.c_str());
+          }
+
+          if(entities[i].data.find("tf") != entities[i].data.end()) {
+            std::string frame = entities[i].data["tf"];
+
+            if (verbosity > 0) {
+              ROS_INFO("Added TF frame %s for entity %s (class %s)", frame.c_str(), entities[i].name.c_str(), entities[i].obj_class.c_str());
+            }
+
+          }
+
+          // add floating root frames if necessary
+          if(entities[i].data.find("floating_frame") != entities[i].data.end()) {
+            std::string floating_frame = entities[i].data["floating_frame"];
+            floating_frames[entities[i].name] = floating_frame;
           }
 
         } catch (std::exception ex) {
