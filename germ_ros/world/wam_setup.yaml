@@ -1,4 +1,4 @@
-wam_setup:
+robots:
   classes: [BarrettWAM, Stage]
   entities:
     - name: wam1

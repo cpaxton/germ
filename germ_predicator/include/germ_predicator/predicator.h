@@ -29,6 +29,9 @@
 #include <germ_msgs/Predicate.h>
 #include <germ_msgs/Object.h>
 
+// germ tools
+#include <germ_ros/EntityLoader.h>
+
 // boost includes
 #include <boost/bind/bind.hpp>
 

@@ -93,13 +93,13 @@ This predicate indicates that *Parent* is to the left of *Child*, from the frame
 
 ##### WORLD-IN-BACK-OF
 
-#### NEAR
+##### NEAR
 
-#### NEAR-MESH
+##### NEAR-MESH
 
-#### NEAR-XY
+##### NEAR-XY
 
-#### TOUCHING
+##### TOUCHING
 
 ## Conventions
 
