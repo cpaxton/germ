@@ -1,4 +1,10 @@
 #include <germ_predicator/predicator.h>
+#include <germ_ros/PredicateTools.h>
+
+using namespace germ_ros;
+
+#define CONCAT(x,y,z) (x + y + z)
+#define KEY(p) (CONCAT(p.predicate.name, p.parent.name, p.child.name))
 
 /**
   germ_predicator
@@ -146,7 +152,7 @@ namespace germ_predicator {
       // -----------------------------------------------------------
     }
 
-    initializePredicateList();
+    //initializePredicateList();
   }
 
   /**
@@ -225,7 +231,7 @@ namespace germ_predicator {
    * checks for all pairs of objects, determines collisions and distances
    * publishes the relationships between all of these objects
    */
-  void PredicateContext::addCollisionPredicates(const std::vector<RobotState *> &states, unsigned int idx) {
+  void PredicateContext::addCollisionPredicates(germ_msgs::PredicateInstanceList &output, const std::vector<RobotState *> &states, unsigned int idx) {
 
     unsigned i = 0;
     for(typename std::vector<PlanningScene *>::iterator it1 = scenes.begin();
@@ -283,29 +289,20 @@ namespace germ_predicator {
             cit != res.contacts.end(); 
             ++cit)
         {
-          /*
-          // write the correct predicate
-          predicator_msgs::PredicateStatement ps;
-          ps.predicate = "touching";
-          ps.value = -1.0 * dist;
-          ps.num_params = 2;
-          ps.params[0] = cit->first.first;
-          ps.params[1] = cit->first.second;
-          output.statements.push_back(ps);
-
-          // the reverse is also true, so update it
-          predicator_msgs::PredicateStatement ps2;
-          ps2.predicate = "touching";
-          ps2.value = -1.0 * dist;
-          ps2.num_params = 2;
-          ps2.params[0] = cit->first.second;
-          ps2.params[1] = cit->first.first;
-          output.statements.push_back(ps2);
-          */
           
-          std::cout << cit->first.second << ", " << cit->first.first << " /// ";
-          std::cout << frames_to_entity_names[cit->first.second] << ", " << frames_to_entity_names[cit->first.first] << std::endl;
-
+          if(frames_to_entity_names.find(cit->first.second) != frames_to_entity_names.end()
+             && frames_to_entity_names.find(cit->first.first) != frames_to_entity_names.end())
+          {
+            germ_msgs::PredicateInstance pi;
+            createPredicateInstance(pi, collision_predicates[0],
+                                    frames_to_entity_names[cit->first.second],
+                                    frames_to_entity_names[cit->first.first],
+                                    true, true);
+            if(verbosity > 0) {
+              ROS_printPredicate(pi);
+            }
+            output.predicates.push_back(pi);
+          }
         }
 
         if (verbosity > 1) {
@@ -327,9 +324,9 @@ namespace germ_predicator {
     output.info.name = ros::this_node::getName();
 
     updateRobotStates();
-    addCollisionPredicates(states);
-    addGeometryPredicates(states);
-    addReachabilityPredicates(states);
+    addCollisionPredicates(output, states);
+    addGeometryPredicates(output, states);
+    addReachabilityPredicates(output, states);
 
     pub.publish(output);
   }
@@ -338,45 +335,11 @@ namespace germ_predicator {
    * addReachabilityPredicates()
    * compute whether or not we can reach certain points or waypoints
    */
-  void PredicateContext::addReachabilityPredicates(const std::vector<RobotState *> &states) {
+  void PredicateContext::addReachabilityPredicates(germ_msgs::PredicateInstanceList &output, const std::vector<RobotState *> &states) {
     // update list of reachable waypoints
     // use a service call to predicator to get the relevant waypoints
 
     // compute whether or not that point can be reached
-  }
-
-  static inline void ROS_PRINT_PREDICATE(const germ_msgs::PredicateInstance &pi) {
-    ROS_INFO("PredicateInstance: %s ---[ %s ]---> %s", pi.parent.name.c_str(), pi.predicate.name.c_str(), pi.child.name.c_str());
-  }
-
-  void PredicateContext::initializePredicateList() {
-
-    unsigned int idx = 0;
-    output.predicates.clear();
-
-    if(verbosity > 0) {
-      ROS_INFO("Computing list of predicates!");
-    }
-    for (typename std::map<std::string, std::string>::iterator it = frames_to_entity_names.begin();
-         it != frames_to_entity_names.end();
-         ++it)
-    {
-      for (typename std::map<std::string, std::string>::iterator it2 = frames_to_entity_names.begin();
-           it2 != frames_to_entity_names.end();
-           ++it2)
-      {
-        germ_msgs::PredicateInstance pi;
-        pi.predicate.name = collision_predicates[0];
-        pi.parent.name = it->second;
-        pi.child.name = it2->second;
-
-        ROS_PRINT_PREDICATE(pi);
-
-        for (unsigned int i = 0; i < num_geometry_predicates; ++i) {
-
-        }
-      }
-    }
   }
 
   /**
@@ -405,7 +368,7 @@ namespace germ_predicator {
    ring1/ring_link 
    world stage_link 
    */
-  void PredicateContext::addGeometryPredicates(const std::vector<RobotState *> &states) {
+  void PredicateContext::addGeometryPredicates(germ_msgs::PredicateInstanceList &output, const std::vector<RobotState *> &states) {
 
     unsigned int i = 0;
     for(typename std::vector<RobotState *>::const_iterator it = states.begin();
@@ -419,6 +382,8 @@ namespace germ_predicator {
            ++link1)
       {
         if (link1->compare(std::string("world")) == 0) {
+          continue;
+        } else if (frames_to_entity_names.find(*link1) == frames_to_entity_names.end()) {
           continue;
         }
 
@@ -445,6 +410,8 @@ namespace germ_predicator {
                ++link2)
           {
             if (link2->compare(std::string("world")) == 0) {
+              continue;
+            }else if (frames_to_entity_names.find(*link2) == frames_to_entity_names.end()) {
               continue;
             }
 
@@ -475,6 +442,7 @@ namespace germ_predicator {
             PredicateStatement near = createStatement("near",-1.0 * dist + near_3d_threshold,*link1,*link2);
             PredicateStatement near_xy = createStatement("near_xy",-1.0 * dist_xy + near_2d_threshold,*link1,*link2);
             */
+            PredicateInstance wleft, wright, wfront, wback, wup, wdown, near, near_xy;
 
             /*
             // x is left/right

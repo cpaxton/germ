@@ -19,18 +19,12 @@ task:
         - key: description
           type: string
           value: /peg1_description
-        - key: tf
-          type: tf_frame
-          value: peg1
     - name: peg2
       class: Peg
       properties:
         - key: description
           type: string
           value: /peg2_description
-        - key: tf
-          type: tf_frame
-          value: peg2
     - name: peg1Base
       class: PegBase
       properties:
