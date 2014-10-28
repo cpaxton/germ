@@ -16,9 +16,11 @@ There is also a specific format for world information that is associated with GE
 
 This package contains the code to produce predicates from object relationship information. It is written in C++ and uses the Germ ROS messages to communicate to the database.
 
-It reads entity definitions from `./definitions/`, and so it should be started up in the same namespace as other code (by convention, all GERM nodes are grouped together in a `germ` namespace).
+It reads entity definitions from `./definitions/`, and so it should be started up in the same namespace as other code (by convention, all GERM nodes are grouped together in a `germ` namespace). This node will read two categories of configuration settings: **robots** and **task**. In the future there may be a way to define additional sets of configuration settings. The reason configuration settings are grouped like this is for code reusability: as we add more data describing, say, the robots, we can reuse them across a larger pool of example tasks.
 
-This node will read two categories of configuration settings: **robots** and **task**. In the future there may be a way to define additional sets of configuration settings. The reason configuration settings are grouped like this is for code reusability: as we add more data describing, say, the robots, we can reuse them across a larger pool of example tasks.
+Predicator publishes a series of *PredicateInstanceList* messages, first as a comprehensive list of true/false predicates and subsequently as diffs.
+
+**Note for debugging:** if you're having trouble starting Predicator, make sure you have all of the right parameters set up on the parameter server. Predicator requires object information to be loaded to various description parameters, defined in the world .YAML files, in order to function.
 
 #### Unique Properties
 
