@@ -152,7 +152,7 @@ namespace germ_predicator {
       // -----------------------------------------------------------
     }
 
-    //initializePredicateList();
+    initializePredicateList();
   }
 
   /**
@@ -172,6 +172,45 @@ namespace germ_predicator {
          ++it)
     {
       delete *it;
+    }
+  }
+
+  /**
+   * initializePredicateList()
+   * Creates a map containing the truth of all predicates
+   * This is used to generate a set of deletion messages for missing predicates
+   */
+  void PredicateContext::initializePredicateList() {
+
+    unsigned int idx = 0;
+    predicate_found.clear();
+
+    if(verbosity > 0) {
+      ROS_INFO("Computing list of predicates!");
+    }
+    for (typename std::map<std::string, std::string>::iterator it = frames_to_entity_names.begin();
+         it != frames_to_entity_names.end();
+         ++it)
+    {
+      for (typename std::map<std::string, std::string>::iterator it2 = frames_to_entity_names.begin();
+           it2 != frames_to_entity_names.end();
+           ++it2)
+      {
+
+        if(it->second == it2->second) {
+          continue;
+        }
+
+        PredicateInstance pi;
+        for (unsigned int i = 0; i < num_collision_predicates; ++i) {
+          createPredicateInstance(pi, collision_predicates[i], it->first, it2->second, true);
+          predicate_found[pi] = true;
+        }
+        for (unsigned int i = 0; i < num_geometry_predicates; ++i) {
+          createPredicateInstance(pi, geometry_predicates[i], it->first, it2->second, true);
+          predicate_found[pi] = true;
+        }
+      }
     }
   }
 
@@ -386,6 +425,7 @@ namespace germ_predicator {
         } else if (frames_to_entity_names.find(*link1) == frames_to_entity_names.end()) {
           continue;
         }
+        std::string link1Entity = frames_to_entity_names[*link1];
 
         // access world coordinates
         // NOTE: does not work for the ring yet!
@@ -414,6 +454,7 @@ namespace germ_predicator {
             }else if (frames_to_entity_names.find(*link2) == frames_to_entity_names.end()) {
               continue;
             }
+            std::string link2Entity = frames_to_entity_names[*link2];
 
             Eigen::Affine3d tf2 = getLinkTransform(*it2, *link2);
 
@@ -432,48 +473,77 @@ namespace germ_predicator {
             double dist_xy = sqrt((xdiff*xdiff) + (ydiff*ydiff)); // compute xy distance only
             double dist = sqrt((xdiff*xdiff) + (ydiff*ydiff) + (zdiff*zdiff)); // compute xyz distance
 
-            /*
-            PredicateStatement left = createStatement("left_of",xdiff - rel_x_threshold,*link1,*link2,"world");
-            PredicateStatement right = createStatement("right_of",-1.0 * xdiff - rel_x_threshold,*link1,*link2,"world");
-            PredicateStatement front = createStatement("in_front_of",ydiff - rel_y_threshold,*link1,*link2,"world");
-            PredicateStatement back = createStatement("behind",-1.0 * ydiff - rel_y_threshold,*link1,*link2,"world");
-            PredicateStatement up = createStatement("above",zdiff - rel_z_threshold,*link1,*link2,"world");
-            PredicateStatement down = createStatement("below",-1.0 * zdiff - rel_z_threshold,*link1,*link2,"world");
-            PredicateStatement near = createStatement("near",-1.0 * dist + near_3d_threshold,*link1,*link2);
-            PredicateStatement near_xy = createStatement("near_xy",-1.0 * dist_xy + near_2d_threshold,*link1,*link2);
-            */
             PredicateInstance wleft, wright, wfront, wback, wup, wdown, near, near_xy;
 
-            /*
             // x is left/right
             if (xdiff < -1.0 * rel_x_threshold){
-              list.statements.push_back(right);
+              createPredicateInstance(wright,
+                                      geometry_predicates[WORLD_REF_IDX + RIGHT_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(wright);
             } else if (xdiff > rel_x_threshold) {
-              list.statements.push_back(left);
+              createPredicateInstance(wleft,
+                                      geometry_predicates[WORLD_REF_IDX + LEFT_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(wleft);
             }
 
             // y is front/back
             if (ydiff < -1.0 * rel_y_threshold) {
-              list.statements.push_back(back);
+              createPredicateInstance(wback,
+                                      geometry_predicates[WORLD_REF_IDX + BACK_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(wback);
             } else if (ydiff > rel_y_threshold) {
-              list.statements.push_back(front);
+              createPredicateInstance(wfront,
+                                      geometry_predicates[WORLD_REF_IDX + FRONT_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(wfront);
             }
 
             // z is front/back
             if (zdiff < -1.0 * rel_z_threshold) {
-              list.statements.push_back(down);
+              createPredicateInstance(wdown,
+                                      geometry_predicates[WORLD_REF_IDX + BELOW_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(wdown);
             } else if (zdiff > rel_z_threshold) {
-              list.statements.push_back(up);
+              createPredicateInstance(wup,
+                                      geometry_predicates[WORLD_REF_IDX + ABOVE_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              ROS_printPredicate(wup);
+              output.predicates.push_back(wup);
             }
 
             if (dist < near_3d_threshold) {
-              list.statements.push_back(near);
+              createPredicateInstance(near,
+                                      geometry_predicates[NEAR_IDX],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, true);
+              output.predicates.push_back(near);
             }
 
             if (dist_xy < near_2d_threshold) {
-              list.statements.push_back(near_xy);
+              createPredicateInstance(near_xy,
+                                      geometry_predicates[NEAR_XY_IDX],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, true);
+              output.predicates.push_back(near_xy);
             }
-            */
           }
         }
       }

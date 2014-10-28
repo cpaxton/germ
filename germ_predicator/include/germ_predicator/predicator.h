@@ -32,11 +32,11 @@
 
 // germ tools
 #include <germ_ros/EntityLoader.h>
+#include <germ_ros/utility.hpp>
 
 // boost includes
 #include <boost/bind/bind.hpp>
 
-#include "utility.hpp"
 
 using planning_scene::PlanningScene;
 using robot_model_loader::RobotModelLoader;
@@ -53,7 +53,7 @@ namespace germ_predicator {
   const std::string geometry_predicates[] = {"NEAR", "NEAR-XY", "ABOVE", "BELOW", "LEFT-OF", "RIGHT-OF", "IN-FRONT-OF", "IN-BACK-OF",
     "WORLD-ABOVE", "WORLD-BELOW", "WORLD-LEFT-OF", "WORLD-RIGHT-OF", "WORLD-IN-FRONT-OF", "WORLD-IN-BACK-OF"};
   const std::string reachable_predicates[] = {"IS-REACHABLE"};
-  
+
   const unsigned int num_collision_predicates = 2;
   const unsigned int num_geometry_predicates = 14;
   const unsigned int num_reachable_predicates = 1;
@@ -100,6 +100,9 @@ namespace germ_predicator {
     Predicate(std::string predicate, std::string parent, std::string child);
   };
 
+
+  typedef std::unordered_map<germ_msgs::PredicateInstance, bool, germ_ros::Hash, germ_ros::Equals> PredicateTruthMap;
+
   /**
    * PredicateContext
    *
@@ -117,8 +120,9 @@ namespace germ_predicator {
     // entities represented as concrete objects in the world
     std::vector<std::string> robot_names; 
 
-    // lookup predicate indices in output
-    std::unordered_map<std::string, unsigned int> index_lookup;
+    // store whether or not predicates are true and should be added
+    // or they are false and should be removed
+    PredicateTruthMap predicate_found;
 
     double rel_x_threshold;
     double rel_y_threshold;
@@ -203,6 +207,14 @@ namespace germ_predicator {
      * If so, compose with TF frame
      */
     Eigen::Affine3d getLinkTransform(const RobotState *state, const std::string &linkName) const;
+
+  private:
+    /**
+     * initializePredicateList()
+     * Creates a map containing the truth of all predicates
+     * This is used to generate a set of deletion messages for missing predicates
+     */
+    void initializePredicateList();
   };
 }
 

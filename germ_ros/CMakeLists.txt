@@ -49,6 +49,9 @@ include_directories(
 add_library(GermRosTools
   src/EntityLoader.cpp
   src/PredicateTools.cpp
+  include/${PROJECT_NAME}/utility.hpp
+  include/${PROJECT_NAME}/EntityLoader.h
+  include/${PROJECT_NAME}/PredicateTools.h
 )
 
 ## Specify libraries to link a library or executable target against

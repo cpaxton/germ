@@ -63,7 +63,6 @@ include_directories(
 add_library(predicator
    src/${PROJECT_NAME}/predicator.cpp
    include/${PROJECT_NAME}/predicator.h
-   include/${PROJECT_NAME}/utility.hpp
 )
 
 target_link_libraries(predicator ${catkin_LIBRARIES})

@@ -10,7 +10,7 @@ using std::string;
 using std::unordered_map;
 using namespace germ_msgs;
 
-namespace germ_predicator {
+namespace germ_ros {
 
   struct Hash {
 
