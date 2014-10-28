@@ -29,7 +29,7 @@ catkin_python_setup()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES EntityLoader
+  LIBRARIES GermRosTools
   CATKIN_DEPENDS germ_msgs germ_neo4j
 )
 
@@ -46,12 +46,13 @@ include_directories(
 )
 
 ## Declare a cpp library
-add_library(EntityLoader
+add_library(GermRosTools
   src/EntityLoader.cpp
+  src/PredicateTools.cpp
 )
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(EntityLoader
+target_link_libraries(GermRosTools
   ${catkin_LIBRARIES}
 )
 
