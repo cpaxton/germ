@@ -33,5 +33,7 @@ namespace germ_ros {
    */
   std::vector<Entity> loadEntities(const std::string &path, const std::vector<std::string> &defsets);
 
+
+  void printEntity(const Entity &entity);
 }
 #endif

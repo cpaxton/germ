@@ -74,6 +74,16 @@ namespace germ_ros {
     return entities;
   }
 
-
+  void printEntity(const Entity &entity) {
+      std::cout << "Name: " << entity.name << std::endl;
+      std::cout << "Class: " << entity.obj_class << std::endl;
+      std::cout << "Properties:" << std::endl;
+      for (typename std::map<std::string, std::string>::const_iterator it = entity.data.begin();
+           it != entity.data.end();
+           ++it)
+      {
+        std::cout << "\t" << it->first << ": " << it->second << std::endl;
+      }
+  }
 
 }

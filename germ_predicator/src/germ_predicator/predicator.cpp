@@ -48,8 +48,12 @@ namespace germ_predicator {
 
     // parse through specified entities
     for (unsigned int i = 0; i < entities.size(); ++i) {
+
+      printEntity(entities[i]);
+
       if(entities[i].data.find("description") != entities[i].data.end()) {
         std::string desc = entities[i].data["description"];
+        robot_names.push_back(entities[i].name);
 
         if(verbosity > 0) {
           ROS_INFO("Entity %d robot description parameter: %s", i, desc.c_str());
@@ -75,7 +79,7 @@ namespace germ_predicator {
             std::string topic = entities[i].data["joint_states_topic"];
 
             if(verbosity > 0) {
-              ROS_INFO("Entity %d robot description parameter: %s", i, topic.c_str());
+              ROS_INFO("Entity %d joint states topic: %s", i, topic.c_str());
             }
 
             // create the subscriber
@@ -84,15 +88,6 @@ namespace germ_predicator {
                             boost::bind(joint_state_callback, _1, state)));
           } else {
             ROS_WARN("No joint states topic corresponding to description %s!", desc.c_str());
-          }
-
-          if(entities[i].data.find("tf") != entities[i].data.end()) {
-            std::string frame = entities[i].data["tf"];
-
-            if (verbosity > 0) {
-              ROS_INFO("Added TF frame %s for entity %s (class %s)", frame.c_str(), entities[i].name.c_str(), entities[i].obj_class.c_str());
-            }
-
           }
 
           // add floating root frames if necessary
@@ -109,95 +104,26 @@ namespace germ_predicator {
         ROS_WARN("No robot description parameter defined for entity %d (name=%s, class=%s)!", i, entities[i].name.c_str(), entities[i].obj_class.c_str());
       }
 
-
-    }
-
-#ifdef _PREDICATOR_
-    // read in topics and descriptions
-    for(unsigned int i = 0; i < descriptions.size(); ++i) {
-      std::string desc;
-      std::string topic;
-
-      if(descriptions[i].getType() == XmlRpc::XmlRpcValue::TypeString) {
-        desc = static_cast<std::string>(descriptions[i]);
-        if(verbosity > 0) {
-          std::cout << "Robot Description parameter name: " << desc << std::endl;
-        }
-      } else {
-        ROS_WARN("Description %u was not of type \"string\"!", i);
-        continue;
-      }
-
-      try {
-        // create a robot model with state desc
-        robot_model_loader::RobotModelLoader robot_model_loader(desc);
-        robot_model::RobotModelPtr model = robot_model_loader.getModel();
-        PlanningScene *scene = new PlanningScene(model);
-        scene->getCollisionRobotNonConst()->setPadding(padding);
-        scene->propogateRobotPadding();
-      } catch (std::exception ex) {
-        std::cerr << ex.show() << std::endl;
-      }
-
-      // get all link names as possible assignments
-      for(typename std::vector<std::string>::const_iterator it = model->getLinkModelNames().begin();
-          it != model->getLinkModelNames().end();
-          ++it)
-      {
-        pval.assignments.push_back(*it);
-      }
-
-      robots.push_back(model);
-      
-      scenes.push_back(scene);
-
-      RobotState *state = new RobotState(model);
-      states.push_back(state);
-
-      if(i < topics.size() && topics[i].getType() == XmlRpc::XmlRpcValue::TypeString) {
-        topic = static_cast<std::string>(topics[i]);
-        if(verbosity > 0) {
-          std::cout << "JointState topic name: " << topic << std::endl;
-        }
-
-        // create the subscriber
-        subs.push_back(nh.subscribe<sensor_msgs::JointState>
-                       (topic, 1000,
-                        boost::bind(joint_state_callback, _1, state)));
-      } else if (verbosity > 0) {
-        ROS_WARN("no topic corresponding to description %s!", desc.c_str());
-      }
-    }
-
-    // read in frames of interest
-    for(unsigned int i = 0; i < frames_list.size(); ++i) {
-      std::string frame;
-
-      if(frames_list[i].getType() == XmlRpc::XmlRpcValue::TypeString) {
-        frame = static_cast<std::string>(frames_list[i]);
-        if(verbosity > 0) {
-          std::cout << "Including frame: " << frame << std::endl;
-        }
+      if(entities[i].data.find("tf") != entities[i].data.end()) {
+        std::string frame = entities[i].data["tf"];
         frames.push_back(frame);
+        frames_to_entity_names[frame] = entities[i].name;
+
+        if (verbosity > 0) {
+          ROS_INFO("Added TF frame %s for entity %s (class %s)", frame.c_str(), entities[i].name.c_str(), entities[i].obj_class.c_str());
+        }
       } else {
-        ROS_WARN("Frame list entry %u was not of type \"string\"!", i);
-        continue;
+        ROS_WARN("No TF frame specified for entity %s!", entities[i].name.c_str());
       }
+
     }
 
-    if (load_floating) {
-      if (verbosity > 0) {
-        ROS_INFO("about to parse floating");
-      }
-      // read in root TF frames
-      for(unsigned int i = 0; i < floating.size(); ++i) {
-        std::string id = floating[i]["id"];
-        std::string frame = floating[i]["frame"];
-
-        floating_frames[id] = frame;
-      }
+    for(typename std::map<std::string, std::string>::iterator it = frames_to_entity_names.begin();
+        it != frames_to_entity_names.end();
+        ++it)
+    {
+      std::cout << it->first << " --> " << it->second << std::endl;
     }
-#endif
 
     // print out information on all the different joints
     unsigned int i = 0;
@@ -219,6 +145,8 @@ namespace germ_predicator {
       }
       // -----------------------------------------------------------
     }
+
+    initializePredicateList();
   }
 
   /**
@@ -374,6 +302,9 @@ namespace germ_predicator {
           ps2.params[1] = cit->first.first;
           output.statements.push_back(ps2);
           */
+          
+          std::cout << cit->first.second << ", " << cit->first.first << " /// ";
+          std::cout << frames_to_entity_names[cit->first.second] << ", " << frames_to_entity_names[cit->first.first] << std::endl;
 
         }
 
@@ -412,6 +343,40 @@ namespace germ_predicator {
     // use a service call to predicator to get the relevant waypoints
 
     // compute whether or not that point can be reached
+  }
+
+  static inline void ROS_PRINT_PREDICATE(const germ_msgs::PredicateInstance &pi) {
+    ROS_INFO("PredicateInstance: %s ---[ %s ]---> %s", pi.parent.name.c_str(), pi.predicate.name.c_str(), pi.child.name.c_str());
+  }
+
+  void PredicateContext::initializePredicateList() {
+
+    unsigned int idx = 0;
+    output.predicates.clear();
+
+    if(verbosity > 0) {
+      ROS_INFO("Computing list of predicates!");
+    }
+    for (typename std::map<std::string, std::string>::iterator it = frames_to_entity_names.begin();
+         it != frames_to_entity_names.end();
+         ++it)
+    {
+      for (typename std::map<std::string, std::string>::iterator it2 = frames_to_entity_names.begin();
+           it2 != frames_to_entity_names.end();
+           ++it2)
+      {
+        germ_msgs::PredicateInstance pi;
+        pi.predicate.name = collision_predicates[0];
+        pi.parent.name = it->second;
+        pi.child.name = it2->second;
+
+        ROS_PRINT_PREDICATE(pi);
+
+        for (unsigned int i = 0; i < num_geometry_predicates; ++i) {
+
+        }
+      }
+    }
   }
 
   /**

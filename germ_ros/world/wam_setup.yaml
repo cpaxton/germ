@@ -1,5 +1,5 @@
 robots:
-  classes: [BarrettWAM, Stage]
+  classes: [BarrettWAM, BarrettPart, Stage]
   entities:
     - name: wam1
       class: BarrettWAM
@@ -19,6 +19,18 @@ robots:
         - key: joint_states_topic
           type: string
           value: /gazebo/w2barrett_manager/joint_states
+    - name: wam1Wrist
+      class: BarrettPart
+      properties:
+        - key: tf
+          type: tf_frame
+          value: wam/wrist_palm_link
+    - name: wam2Wrist
+      class: BarrettPart
+      properties:
+        - key: tf
+          type: tf_frame
+          value: wam2/wrist_palm_link
     - name: stage
       class: Stage
       properties:
@@ -32,3 +44,9 @@ robots:
     - name: MOUNTED-ON
       parent: wam2
       child: stage
+    - name: CONTAINS-PART
+      parent: wam1
+      child: wam1Wrist
+    - name: CONTAINS-PART
+      parent: wam2
+      child: wam2Wrist

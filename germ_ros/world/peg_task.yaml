@@ -9,10 +9,10 @@ task:
           value: /ring1_description
         - key: tf
           type: tf_frame
-          value: /ring1
+          value: ring1/ring_link
         - key: floating_frame
           type: tf_frame
-          value: /ring1/ring_link
+          value: ring1/ring_link
     - name: peg1
       class: Peg
       properties:
@@ -21,7 +21,7 @@ task:
           value: /peg1_description
         - key: tf
           type: tf_frame
-          value: /peg1
+          value: peg1
     - name: peg2
       class: Peg
       properties:
@@ -30,7 +30,7 @@ task:
           value: /peg2_description
         - key: tf
           type: tf_frame
-          value: /peg2
+          value: peg2
     - name: peg1Base
       class: PegBase
       properties:
