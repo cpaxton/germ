@@ -21,7 +21,7 @@ namespace germ_predicator {
     state->setVariableValues(*msg);
   }
 
-  PredicateContext::PredicateContext(bool publish) {
+  PredicateContext::PredicateContext(bool publish) : publish_diff(true) {
     ros::NodeHandle nh_tilde("~");
     ros::NodeHandle nh;
 
@@ -30,7 +30,7 @@ namespace germ_predicator {
     XmlRpc::XmlRpcValue topics;
     XmlRpc::XmlRpcValue floating; // set of floating root joints that need to be updated
 
-    nh_tilde.param("verbosity", verbosity, 1);
+    nh_tilde.param("verbosity", verbosity, 0);
     nh_tilde.param("padding", padding, 0.01);
     nh_tilde.param("world_frame", world_frame, std::string("/world"));
 
@@ -203,12 +203,12 @@ namespace germ_predicator {
 
         PredicateInstance pi;
         for (unsigned int i = 0; i < num_collision_predicates; ++i) {
-          createPredicateInstance(pi, collision_predicates[i], it->first, it2->second, true);
-          predicate_found[pi] = true;
+          createPredicateInstance(pi, collision_predicates[i], it->second, it2->second, false);
+          predicate_found[pi] = false;
         }
         for (unsigned int i = 0; i < num_geometry_predicates; ++i) {
-          createPredicateInstance(pi, geometry_predicates[i], it->first, it2->second, true);
-          predicate_found[pi] = true;
+          createPredicateInstance(pi, geometry_predicates[i], it->second, it2->second, false);
+          predicate_found[pi] = false;
         }
       }
     }
@@ -337,7 +337,7 @@ namespace germ_predicator {
                                     frames_to_entity_names[cit->first.second],
                                     frames_to_entity_names[cit->first.first],
                                     true, true);
-            if(verbosity > 0) {
+            if(verbosity > 1) {
               ROS_printPredicate(pi);
             }
             output.predicates.push_back(pi);
@@ -367,7 +367,63 @@ namespace germ_predicator {
     addGeometryPredicates(output, states);
     addReachabilityPredicates(output, states);
 
-    pub.publish(output);
+    for(PredicateInstance &pi: output.predicates) {
+      predicate_found[pi] = true;
+      if (pi.is_bidirectional) {
+        PredicateInstance pi2 = pi;
+        std::string child2 = pi.parent.name;
+        pi2.parent.name = pi.child.name;
+        pi2.child.name = child2;
+        predicate_found[pi] = true;
+      }
+    }
+
+    for(PredicateTruthMap::iterator it = predicate_found.begin(); it != predicate_found.end(); ++it) {
+      if (it->second == false) {
+        output.predicates.push_back(it->first);
+      } else {
+        it->second = false;
+      }
+    }
+
+    if (!publish_diff) {
+      output.is_diff = false;
+      pub.publish(output);
+      publish_diff = true;
+
+      last_output.clear();
+      for(PredicateInstance &pi: output.predicates) {
+        last_output[pi] = pi.operation;
+      }
+
+    } else {
+      // find out which are in the old message
+      germ_msgs::PredicateInstanceList new_output;
+      for (PredicateInstance &pi: output.predicates) {
+        if (last_output.find(pi) == last_output.end()
+            || last_output[pi] != pi.operation)
+        {
+          new_output.predicates.push_back(pi);
+          ROS_printPredicate(pi);
+        }
+      }
+
+      new_output.is_diff = true;
+      pub.publish(new_output);
+
+      for(PredicateInstance &pi: new_output.predicates) {
+        last_output[pi] = pi.operation;
+      }
+    }
+
+    unsigned int _size = 0;
+    for (typename PredicateOperationMap::iterator it = last_output.begin(); it != last_output.end(); ++it) {
+      if(it->second == PredicateInstance::ADD) {
+        ++_size;
+      }
+    }
+    std::cout << "last output: " << _size << "(" << last_output.size() << " entries)" << std::endl;
+
   }
 
   /**
@@ -523,7 +579,6 @@ namespace germ_predicator {
                                       link1Entity,
                                       link2Entity,
                                       true, false);
-              ROS_printPredicate(wup);
               output.predicates.push_back(wup);
             }
 

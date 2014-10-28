@@ -102,6 +102,7 @@ namespace germ_predicator {
 
 
   typedef std::unordered_map<germ_msgs::PredicateInstance, bool, germ_ros::Hash, germ_ros::Equals> PredicateTruthMap;
+  typedef std::unordered_map<germ_msgs::PredicateInstance, unsigned int, germ_ros::Hash, germ_ros::Equals> PredicateOperationMap;
 
   /**
    * PredicateContext
@@ -123,6 +124,13 @@ namespace germ_predicator {
     // store whether or not predicates are true and should be added
     // or they are false and should be removed
     PredicateTruthMap predicate_found;
+
+    // should the next message be a diff?
+    bool publish_diff;
+
+    // old output message
+    //std::unordered_set<germ_msgs::PredicateInstance,germ_ros::HashOperation,germ_ros::EqualsOperation> last_output;
+    PredicateOperationMap last_output;
 
     double rel_x_threshold;
     double rel_y_threshold;

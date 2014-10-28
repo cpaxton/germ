@@ -5,10 +5,19 @@ using namespace germ_msgs;
 namespace germ_ros {
 
   void ROS_printPredicate(const germ_msgs::PredicateInstance &pi) {
-    if (!pi.is_bidirectional) {
-      ROS_INFO("PredicateInstance: %s ---[ %s ]---> %s", pi.parent.name.c_str(), pi.predicate.name.c_str(), pi.child.name.c_str());
+    if(pi.operation == PredicateInstance::ADD) {
+      if (!pi.is_bidirectional) {
+        ROS_INFO("PredicateInstance: %s ---[ %s ]---> %s", pi.parent.name.c_str(), pi.predicate.name.c_str(), pi.child.name.c_str());
+      } else {
+        ROS_INFO("PredicateInstance: %s <---[ %s ]---> %s", pi.parent.name.c_str(), pi.predicate.name.c_str(), pi.child.name.c_str());
+      }
     } else {
-      ROS_INFO("PredicateInstance: %s <---[ %s ]---> %s", pi.parent.name.c_str(), pi.predicate.name.c_str(), pi.child.name.c_str());
+      if (!pi.is_bidirectional) {
+        ROS_INFO("PredicateInstance: %s -/-[ %s ]-/-> %s", pi.parent.name.c_str(), pi.predicate.name.c_str(), pi.child.name.c_str());
+      } else {
+        ROS_INFO("PredicateInstance: %s <-/-[ %s ]-/-> %s", pi.parent.name.c_str(), pi.predicate.name.c_str(), pi.child.name.c_str());
+      }
+ 
     }
   }
 
@@ -22,7 +31,11 @@ namespace germ_ros {
     pi.predicate.name = std::string(predicate_name);
     pi.parent.name = std::string(parent_name);
     pi.child.name = std::string(child_name);
-    pi.operation = PredicateInstance::ADD;
+    if (add) {
+      pi.operation = PredicateInstance::ADD;
+    } else {
+      pi.operation = PredicateInstance::REMOVE;
+    }
     pi.is_bidirectional = isBidirectional;
   }
 
