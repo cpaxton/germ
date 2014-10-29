@@ -407,6 +407,9 @@ namespace germ_predicator {
           ROS_printPredicate(pi);
         }
       }
+      if (new_output.predicates.size() > 0) {
+        std::cout << "-----" << std::endl;
+      }
 
       new_output.is_diff = true;
       pub.publish(new_output);
@@ -422,7 +425,7 @@ namespace germ_predicator {
         ++_size;
       }
     }
-    std::cout << "last output: " << _size << "(" << last_output.size() << " entries)" << std::endl;
+    //std::cout << "last output: " << _size << "(" << last_output.size() << " entries)" << std::endl;
 
   }
 
@@ -513,6 +516,7 @@ namespace germ_predicator {
             std::string link2Entity = frames_to_entity_names[*link2];
 
             Eigen::Affine3d tf2 = getLinkTransform(*it2, *link2);
+            Eigen::Affine3d tf12 = tf2.inverse() * tf1;
 
             if (verbosity > 2) {
               std::cout << *link1 << ", " << *link2 << std::endl;
@@ -529,7 +533,12 @@ namespace germ_predicator {
             double dist_xy = sqrt((xdiff*xdiff) + (ydiff*ydiff)); // compute xy distance only
             double dist = sqrt((xdiff*xdiff) + (ydiff*ydiff) + (zdiff*zdiff)); // compute xyz distance
 
+            double local_xdiff = tf12.translation()[0];
+            double local_ydiff = tf12.translation()[2];
+            double local_zdiff = tf12.translation()[1];
+
             PredicateInstance wleft, wright, wfront, wback, wup, wdown, near, near_xy;
+            PredicateInstance left, right, front, back, up, down;
 
             // x is left/right
             if (xdiff < -1.0 * rel_x_threshold){
@@ -581,6 +590,64 @@ namespace germ_predicator {
                                       true, false);
               output.predicates.push_back(wup);
             }
+
+            //////////////////////////////////////////////////////////
+            // LOCAL FRAME PREDICATES
+            //////////////////////////////////////////////////////////
+            
+            if (local_xdiff < -1.0 * rel_x_threshold){
+              createPredicateInstance(right,
+                                      geometry_predicates[LOCAL_REF_IDX + RIGHT_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(right);
+            } else if (local_xdiff > rel_x_threshold) {
+              createPredicateInstance(left,
+                                      geometry_predicates[LOCAL_REF_IDX + LEFT_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(left);
+            }
+
+            // y is front/back
+            if (local_ydiff < -1.0 * rel_y_threshold) {
+              createPredicateInstance(back,
+                                      geometry_predicates[LOCAL_REF_IDX + BACK_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(back);
+            } else if (local_ydiff > rel_y_threshold) {
+              createPredicateInstance(front,
+                                      geometry_predicates[LOCAL_REF_IDX + FRONT_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(front);
+            }
+
+            // z is front/back
+            if (local_zdiff < -1.0 * rel_z_threshold) {
+              createPredicateInstance(down,
+                                      geometry_predicates[LOCAL_REF_IDX + BELOW_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(down);
+            } else if (local_zdiff > rel_z_threshold) {
+              createPredicateInstance(up,
+                                      geometry_predicates[LOCAL_REF_IDX + ABOVE_OFFSET],
+                                      link1Entity,
+                                      link2Entity,
+                                      true, false);
+              output.predicates.push_back(up);
+            }
+
+            //////////////////////////////////////////////////////////
+            // DISTANCE PREDICATES
+            //////////////////////////////////////////////////////////
 
             if (dist < near_3d_threshold) {
               createPredicateInstance(near,
