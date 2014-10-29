@@ -61,6 +61,8 @@ namespace germ_predicator {
   /**
    * Indices for finding names of predicates
    */
+  const int TOUCHING_IDX = 0;
+  const int NEAR_MESH_IDX = 1;
   const unsigned int NEAR_IDX = 0;
   const unsigned int NEAR_XY_IDX = 1;
   const unsigned int ABOVE_OFFSET = 0;
@@ -121,6 +123,8 @@ namespace germ_predicator {
     // entities represented as concrete objects in the world
     std::vector<std::string> robot_names; 
 
+    std::map<std::string, std::string> robot_to_entity_names;
+
     // store whether or not predicates are true and should be added
     // or they are false and should be removed
     PredicateTruthMap predicate_found;
@@ -137,6 +141,7 @@ namespace germ_predicator {
     double rel_z_threshold;
     double near_2d_threshold;
     double near_3d_threshold;
+    double near_mesh_threshold;
 
     tf::TransformListener listener;
 

@@ -40,11 +40,12 @@ namespace germ_predicator {
       pub = nh.advertise<germ_msgs::PredicateInstanceList>("update_predicates", 1000);
     }
 
-    nh_tilde.param("rel_x_threshold", rel_x_threshold, 0.1);
-    nh_tilde.param("rel_y_threshold", rel_y_threshold, 0.1);
-    nh_tilde.param("rel_z_threshold", rel_z_threshold, 0.1);
-    nh_tilde.param("near_2D_threshold", near_2d_threshold, 0.2);
-    nh_tilde.param("near_3D_threshold", near_3d_threshold, 0.2);
+    nh.param("predicator/rel_x_threshold", rel_x_threshold, 0.1);
+    nh.param("predicator/rel_y_threshold", rel_y_threshold, 0.1);
+    nh.param("predicator/rel_z_threshold", rel_z_threshold, 0.1);
+    nh.param("predicator/near_2D_threshold", near_2d_threshold, 0.2);
+    nh.param("predicator/near_3D_threshold", near_3d_threshold, 0.2);
+    nh.param("predicator/near_mesh_threshold", near_mesh_threshold, 0.1);
 
     std::vector<std::string> category_list;
     category_list.push_back("robots");
@@ -138,6 +139,8 @@ namespace germ_predicator {
         ++it1, ++i)
     {
       collision_detection::CollisionRobotConstPtr robot1 = (*it1)->getCollisionRobot();
+      robot_to_entity_names[robot1->getRobotModel()->getName()] = robot_names[i];
+      std::cout << robot1->getRobotModel()->getName() << " --> " << robot_names[i] << std::endl;
       // -----------------------------------------------------------
       if (verbosity > 0) {
         std::cout << std::endl;
@@ -318,6 +321,23 @@ namespace germ_predicator {
                                                  robot2->getRobotModel()->getName(),
                                                  robot1->getRobotModel()->getName());
         */
+
+        if(dist < 0) {
+          germ_msgs::PredicateInstance pi;
+          createPredicateInstance(pi, collision_predicates[TOUCHING_IDX],
+                                  robot_to_entity_names[robot1->getRobotModel()->getName()],
+                                  robot_to_entity_names[robot2->getRobotModel()->getName()],
+                                  true, true);
+          output.predicates.push_back(pi);
+        }
+        if (dist < near_mesh_threshold) {
+          germ_msgs::PredicateInstance pi;
+          createPredicateInstance(pi, collision_predicates[NEAR_MESH_IDX],
+                                  robot_to_entity_names[robot1->getRobotModel()->getName()],
+                                  robot_to_entity_names[robot2->getRobotModel()->getName()],
+                                  true, true);
+          output.predicates.push_back(pi);
+        }
 
         if (verbosity > 4) {
           std::cout << res.contacts.size() << " contacts found" << std::endl;
