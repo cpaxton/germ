@@ -88,35 +88,63 @@ Predicates represent some binary truth about the world. They all take the form *
 
 ##### LEFT-OF
 
-This predicate indicates that *Parent* is to the left of *Child*, from the frame of reference of *Child*.
+This predicate indicates that *Parent* is to the left of *Child*, from the frame of reference of *Child*. This is the positive *x* direction.
 
 ##### RIGHT-OF
 
+*Parent* is to the right of *Child*, from local coordinate frame. This is the negative x direction.
+
 ##### ABOVE
+
+*Parent* is above *child*. This is the positive *y* direction.
 
 ##### BELOW
 
+*Parent* is above *child*. This is the negative *y* direction.
+
 ##### IN-FRONT-OF
+
+Positive *z* direction. Note that this is a different set of axes than I used in the world coordinate frame! This is because the WAM arm uses *z* for where each link points, so that makes the most sense for "front" in my mind.
 
 ##### IN-BACK-OF
 
+Negative *z* direction. Note that this is a different set of axes than I used in the world coordinate frame! This is because the WAM arm uses *z* for where each link points, so that makes the most sense for "front" in my mind.
+
 ##### WORLD-LEFT-OF
+
+Positive *y* direction.
 
 ##### WORLD-RIGHT-OF
 
+Negative *y* direction.
+
 ##### WORLD-ABOVE
+
+Positive *z* direction.
 
 ##### WORLD-IN-FRONT-OF
 
+Positive *y* direction.
+
 ##### WORLD-IN-BACK-OF
+
+Positive *z* direction.
 
 ##### NEAR
 
+Distance is within some bound, defaulting at 0.20m.
+
 ##### NEAR-MESH
+
+Distance as computed by FCL (via MoveIt) within some bound, defaulting at 0.10m.
 
 ##### NEAR-XY
 
+Distance in only the world X-Y plain is within some bound, defaulting at 0.10m.
+
 ##### TOUCHING
+
+Determines if two objects or links are in collision, as determined by FCL (via MoveIt).
 
 ## Conventions
 
