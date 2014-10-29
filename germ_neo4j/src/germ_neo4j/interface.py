@@ -38,9 +38,9 @@ class GermDatabaseConnection:
             print p
             if len(p) > 0:
                 self.db.delete(p[0])
-                return True
-            else:
-                return False
+            return True
+            #else:
+            #    return False
         else:
             return False
 
