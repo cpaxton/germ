@@ -42,7 +42,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES predicator
+  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS germ_msgs germ_ros moveit_core moveit_msgs moveit_ros_perception moveit_ros_planning_interface shape_msgs std_srvs tf tf_conversions trajectory_msgs urdf xacro
 #  DEPENDS system_lib
 )
@@ -60,25 +60,19 @@ include_directories(
 )
 
 ## Declare a cpp library
-add_library(predicator
-   src/${PROJECT_NAME}/predicator.cpp
-   include/${PROJECT_NAME}/predicator.h
+add_library(${PROJECT_NAME}
+  src/${PROJECT_NAME}/predicator.cpp
 )
 
-target_link_libraries(predicator ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 ## Declare a cpp executable
-add_executable(moveit_predicator_node src/germ_predicator/moveit_predicator_node.cpp)
+add_executable(moveit_predicator_node
+  src/germ_predicator/moveit_predicator_node.cpp)
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(germ_predicator_node germ_predicator_generate_messages_cpp)
-
-## Specify libraries to link a library or executable target against
- target_link_libraries(moveit_predicator_node
-   ${catkin_LIBRARIES}
-   predicator
-)
+target_link_libraries(moveit_predicator_node
+  ${catkin_LIBRARIES}
+  ${PROJECT_NAME})
 
 #############
 ## Install ##
