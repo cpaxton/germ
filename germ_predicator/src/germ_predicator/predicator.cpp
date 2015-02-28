@@ -3,8 +3,15 @@
 
 using namespace germ_ros;
 
-#define CONCAT(x,y,z) (x + y + z)
-#define KEY(p) (CONCAT(p.predicate.name, p.parent.name, p.child.name))
+template <typename T>
+T CONCAT(T x, T y, T z) {
+  return x+y+z;
+}
+
+template <typename T>
+std::string KEY(T p) {
+  return CONCAT(p.predicate.name, p.parent.name, p.child.name);
+}
 
 /**
   germ_predicator
