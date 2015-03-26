@@ -17,7 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf_conversions
   trajectory_msgs
   urdf
-  urdfdom
   xacro
 )
 
